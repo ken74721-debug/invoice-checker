@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>發票統編查驗系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+TC:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#18120e;--paper:#f4efe6;--paper2:#ece5d5;--accent:#7a1f00;--accent2:#b03010;
+  --gold:#8a6800;--green:#1a5228;--red:#7a0000;--blue:#0f3570;--gray:#7a7060;--border:#c0b49a;--white:#fff;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(0,0,0,.02) 27px,rgba(0,0,0,.02) 28px);}
+header{background:var(--ink);position:relative;overflow:hidden;}
+.hdr{max-width:960px;margin:0 auto;padding:22px 24px;display:flex;align-items:center;gap:16px;position:relative;z-index:1;}
+.seal{width:54px;height:54px;border:2px solid #c8980a;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:'Noto Serif TC',serif;font-size:18px;color:#e8b820;flex-shrink:0;}
+.hdr h1{font-family:'Noto Serif TC',serif;font-size:18px;font-weight:700;letter-spacing:.1em;color:var(--paper);}
+.hdr p{font-size:11px;color:rgba(244,239,230,.45);margin-top:3px;}
+.hdr-bg{position:absolute;right:0;top:50%;transform:translateY(-50%);font-family:'Noto Serif TC',serif;
+  font-size:100px;color:rgba(255,255,255,.025);user-select:none;pointer-events:none;padding-right:12px;}
+.info-bar{background:#fffbf0;border-bottom:1px solid #dfc860;}
+.info-inner{max-width:960px;margin:0 auto;padding:9px 24px;display:flex;gap:20px;flex-wrap:wrap;}
+.ii{display:flex;align-items:center;gap:7px;font-size:11px;}
+.in{width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0;}
+.n1{background:var(--green);}.n2{background:var(--accent);}.n3{background:var(--blue);}
+.ii span{color:#5c4400;}
+main{max-width:960px;margin:0 auto;padding:22px 20px 48px;}
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:18px;}
+.tab{padding:9px 18px;font-size:13px;font-weight:500;color:var(--gray);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.tab:hover{color:var(--ink);}.tab.on{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-pane{display:none;}.tab-pane.on{display:block;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:18px;}
+.card-head{padding:13px 22px 11px;border-bottom:1px solid var(--paper2);}
+.card-head h2{font-family:'Noto Serif TC',serif;font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.05em;}
+.card-body{padding:18px 22px;}
+.lbl{font-size:10px;font-weight:600;color:var(--gray);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;display:block;}
+.ban-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
+.ban-grp{flex:1;min-width:200px;}
+.ban-input{width:100%;font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;letter-spacing:.2em;
+  padding:10px 14px;border:1.5px solid var(--border);border-radius:4px;background:var(--paper);color:var(--ink);outline:none;transition:border-color .2s;}
+.ban-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(122,31,0,.09);}
+.ban-input::placeholder{color:#c8bfaf;font-size:18px;}
+.ban-ctr{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gray);margin-top:3px;text-align:right;}
+.btn-q{background:var(--accent);color:#fff;border:none;padding:10px 24px;font-family:'Noto Sans TC',sans-serif;
+  font-size:14px;font-weight:600;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:7px;height:52px;flex-shrink:0;transition:background .2s;}
+.btn-q:hover{background:var(--accent2);}.btn-q:active{transform:scale(.98);}
+.smps{display:flex;gap:6px;margin-top:11px;flex-wrap:wrap;align-items:center;}
+.smps-lbl{font-size:10.5px;color:var(--gray);}
+.smp{font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 9px;border:1px solid var(--border);
+  border-radius:3px;background:var(--paper2);cursor:pointer;transition:all .15s;}
+.smp:hover{border-color:var(--accent);color:var(--accent);}
+.batch-ta{width:100%;font-family:'JetBrains Mono',monospace;font-size:14px;letter-spacing:.1em;
+  padding:10px 14px;border:1.5px solid var(--border);border-radius:4px;background:var(--paper);resize:vertical;min-height:88px;outline:none;}
+.batch-ta:focus{border-color:var(--accent);}
+.hint{font-size:11px;color:var(--gray);margin-top:5px;}
+.prog-wrap{margin:9px 0;display:none;}
+.prog-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--accent);width:0%;transition:width .3s;}
+.prog-txt{font-size:10.5px;color:var(--gray);margin-top:4px;text-align:center;}
+.btn-batch{margin-top:10px;background:var(--ink);color:var(--paper);border:none;padding:8px 18px;font-size:13px;border-radius:4px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
+.btn-batch:hover{background:#3a2a20;}
+.sec-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--gray);font-weight:600;
+  margin:20px 0 11px;display:flex;align-items:center;gap:10px;}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--border);}
+.res-card{background:var(--white);border:1px solid var(--border);border-radius:4px;margin-bottom:14px;
+  box-shadow:0 2px 10px rgba(0,0,0,.06);overflow:hidden;animation:fadeUp .2s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+.res-hdr{padding:13px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--paper2);flex-wrap:wrap;}
+.badge{padding:4px 11px;border-radius:2px;font-size:11px;font-weight:600;white-space:nowrap;}
+.b-ok    {background:rgba(26,82,40,.09); color:var(--green);border:1px solid rgba(26,82,40,.22);}
+.b-exempt{background:rgba(138,104,0,.09);color:var(--gold); border:1px solid rgba(138,104,0,.25);}
+.b-err   {background:rgba(122,0,0,.08);  color:var(--red);  border:1px solid rgba(122,0,0,.20);}
+.b-unk   {background:rgba(0,0,0,.05);    color:var(--gray); border:1px solid rgba(0,0,0,.12);}
+.src-pill{font-size:9.5px;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:auto;flex-shrink:0;}
+.sp-9400{background:rgba(26,82,40,.07);color:var(--green);border:1px solid rgba(26,82,40,.18);}
+.sp-mix {background:rgba(26,82,40,.07);color:var(--green);border:1px solid rgba(26,82,40,.18);}
+.sp-ai  {background:rgba(15,53,112,.07);color:var(--blue); border:1px solid rgba(15,53,112,.18);}
+.sp-ck  {background:rgba(122,0,0,.06); color:var(--red);   border:1px solid rgba(122,0,0,.15);}
+.sp-fail{background:rgba(0,0,0,.04);   color:var(--gray);  border:1px solid rgba(0,0,0,.1);}
+.co-blk{flex:1;min-width:0;}
+.co-name{font-family:'Noto Serif TC',serif;font-size:16px;font-weight:700;color:var(--ink);}
+.co-ban{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray);margin-top:2px;}
+.res-body{padding:13px 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px 14px;}
+.fk{font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--gray);font-weight:600;margin-bottom:3px;}
+.fv{font-size:13px;font-weight:500;color:var(--ink);}
+.fv.ok{color:var(--green);font-weight:700;}.fv.warn{color:var(--gold);font-weight:700;}
+.fv.blue{color:var(--blue);font-weight:600;}.fv.big{font-family:'Noto Serif TC',serif;font-size:15px;font-weight:700;}
+.assess{margin:0 18px 12px;padding:10px 14px;border-radius:3px;font-size:12.5px;line-height:1.75;}
+.assess.ok  {background:rgba(26,82,40,.055); border-left:3px solid var(--green);color:#1a3a20;}
+.assess.warn{background:rgba(138,104,0,.06);  border-left:3px solid var(--gold); color:#4a3800;}
+.assess.err {background:rgba(122,0,0,.055);   border-left:3px solid var(--red);  color:#520000;}
+.assess.unk {background:rgba(0,0,0,.035);     border-left:3px solid var(--gray); color:#444;}
+details.raw{margin:0 18px 10px;}
+details.raw summary{font-size:11px;color:var(--blue);cursor:pointer;padding:3px 0;list-style:none;}
+details.raw summary::-webkit-details-marker{display:none;}
+details.raw summary::before{content:'▶ ';}
+details.raw[open] summary::before{content:'▼ ';}
+.raw-tbl{margin-top:6px;width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;
+  font-size:10.5px;background:var(--paper);border:1px solid var(--border);border-radius:3px;overflow:hidden;}
+.raw-tbl td{padding:3px 10px;border-bottom:1px solid rgba(0,0,0,.05);vertical-align:top;}
+.raw-tbl tr:last-child td{border-bottom:none;}
+.raw-tbl td:first-child{font-weight:600;color:var(--accent);white-space:nowrap;width:40%;}
+.res-acts{padding:9px 18px;background:var(--paper);border-top:1px solid var(--paper2);display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+.btn-link{font-size:11.5px;text-decoration:none;padding:4px 10px;border-radius:3px;transition:all .15s;display:inline-flex;align-items:center;gap:4px;font-weight:500;}
+.btn-link.red{color:var(--accent);border:1px solid rgba(122,31,0,.28);}
+.btn-link.red:hover{background:rgba(122,31,0,.05);}
+.btn-link.blue{color:var(--blue);border:1px solid rgba(15,53,112,.28);}
+.btn-link.blue:hover{background:rgba(15,53,112,.05);}
+.btn-del{margin-left:auto;background:none;border:none;font-size:11.5px;color:var(--gray);cursor:pointer;padding:4px 8px;border-radius:3px;}
+.btn-del:hover{color:var(--red);}
+.loading{background:var(--white);border:1px solid var(--border);border-radius:4px;padding:16px 18px;display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.spin{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+.spin.blue{border-top-color:var(--blue);}
+@keyframes spin{to{transform:rotate(360deg);}}
+.hist-wrap{background:var(--white);border:1px solid var(--border);border-radius:4px;overflow:hidden;}
+.hist-hdr{padding:11px 18px;background:var(--paper2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.hist-hdr span{font-family:'Noto Serif TC',serif;font-size:13px;font-weight:600;}
+.btn-clr{font-size:10.5px;color:var(--gray);background:none;border:1px solid var(--border);padding:3px 9px;border-radius:3px;cursor:pointer;}
+.btn-clr:hover{color:var(--red);}
+.hist-tbl{width:100%;border-collapse:collapse;font-size:11.5px;}
+.hist-tbl th{text-align:left;padding:6px 14px;font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--gray);font-weight:600;background:var(--paper);border-bottom:1px solid var(--border);}
+.hist-tbl td{padding:7px 14px;border-bottom:1px solid rgba(0,0,0,.04);vertical-align:middle;}
+.hist-tbl tr:last-child td{border-bottom:none;}
+.hist-tbl tr:hover td{background:rgba(0,0,0,.02);}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+.d-ok{background:var(--green);}.d-ex{background:var(--gold);}.d-err{background:var(--red);}.d-unk{background:var(--gray);}
+.empty{text-align:center;padding:32px;color:var(--gray);font-size:13px;}
+.empty-ico{font-size:28px;margin-bottom:8px;opacity:.4;}
+.export-row{display:flex;gap:8px;margin-top:13px;justify-content:flex-end;}
+.btn-exp{font-size:11.5px;padding:6px 13px;border:1px solid var(--border);border-radius:3px;background:var(--white);cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .15s;}
+.btn-exp:hover{border-color:var(--accent);color:var(--accent);}
+@media(max-width:580px){.ban-row{flex-direction:column;}.btn-q{width:100%;justify-content:center;height:auto;padding:12px;}.res-body{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hdr">
+    <div class="seal">查</div>
+    <div><h1>發票統編查驗系統</h1><p>財政部資料集9400 ＋ Claude AI 智慧補查 ／ 雙引擎查驗</p></div>
+  </div>
+  <div class="hdr-bg">稅籍</div>
+</header>
+<div class="info-bar">
+  <div class="info-inner">
+    <div class="ii"><div class="in n1">1</div><span><b>資料集9400</b>：財政部開放稅籍 API（僅含營業中）</span></div>
+    <div class="ii"><div class="in n2">2</div><span><b>Claude AI</b>：缺資料時自動補查財政部官網</span></div>
+    <div class="ii"><div class="in n3">3</div><span><b>完整建議</b>：免開發票、核銷判斷</span></div>
+  </div>
+</div>
+<main>
+  <div class="tabs">
+    <div class="tab on" onclick="switchTab(0)">🔍 單筆查驗</div>
+    <div class="tab" onclick="switchTab(1)">📋 批次查驗</div>
+  </div>
+  <div class="tab-pane on" id="tp0">
+    <div class="card">
+      <div class="card-head"><h2>📋 輸入統一編號查驗</h2></div>
+      <div class="card-body">
+        <div class="ban-row">
+          <div class="ban-grp">
+            <label class="lbl" for="banIn">統一編號（8碼）</label>
+            <input type="text" id="banIn" class="ban-input" maxlength="8" placeholder="00000000"
+              oninput="onInput(this)" onkeydown="if(event.key==='Enter')doQuery()">
+            <div class="ban-ctr" id="ctr">0 / 8</div>
+          </div>
+          <button class="btn-q" onclick="doQuery()">🔍 查驗</button>
+        </div>
+        <div class="smps">
+          <span class="smps-lbl">範例：</span>
+          <button class="smp" onclick="fill('04595297')">04595297 統一超商</button>
+          <button class="smp" onclick="fill('23622647')">23622647 全家便利</button>
+          <button class="smp" onclick="fill('87018196')">87018196 獨資行號</button>
+          <button class="smp" onclick="fill('76611635')">76611635 來來鎖匙</button>
+          <button class="smp" onclick="fill('12345678')">12345678 無效格式</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tab-pane" id="tp1">
+    <div class="card">
+      <div class="card-head"><h2>📋 批次查驗</h2></div>
+      <div class="card-body">
+        <label class="lbl">每行一組統一編號（8碼）</label>
+        <textarea class="batch-ta" id="batchArea" placeholder="04595297&#10;87018196&#10;76611635"></textarea>
+        <div class="hint">每行一個統一編號，系統依序查詢。</div>
+        <div class="prog-wrap" id="progWrap">
+          <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+          <div class="prog-txt" id="progTxt"></div>
+        </div>
+        <button class="btn-batch" onclick="doBatch()">📤 開始批次查驗</button>
+      </div>
+    </div>
+  </div>
+  <div id="resSec" style="display:none">
+    <div class="sec-lbl">查驗結果</div>
+    <div id="resList"></div>
+    <div class="export-row" id="expRow" style="display:none">
+      <button class="btn-exp" onclick="toCSV()">⬇ 匯出 CSV</button>
+      <button class="btn-exp" onclick="toTXT()">⬇ 匯出文字報表</button>
+    </div>
+  </div>
+  <div class="sec-lbl" style="margin-top:28px">查詢記錄</div>
+  <div class="hist-wrap">
+    <div class="hist-hdr"><span>📁 本次查詢記錄</span><button class="btn-clr" onclick="clearAll()">清除全部</button></div>
+    <div id="histBody"><div class="empty"><div class="empty-ico">🗂</div>尚無查詢記錄</div></div>
+  </div>
+  <div style="margin-top:22px;font-size:10.5px;color:var(--gray);text-align:center;line-height:2">
+    ① <a href="https://eip.fia.gov.tw/OAI/swagger-ui.html" target="_blank" style="color:var(--accent)">財政部資料集9400 API</a>
+    ② <a href="https://www.etax.nat.gov.tw/etwmain/etw113w1/ban/query" target="_blank" style="color:var(--accent)">財政部稅務入口網</a>
+    ③ <a href="https://www.etax.nat.gov.tw/etwmain/etw113w3/ban/query" target="_blank" style="color:var(--accent)">免開發票查詢</a>
+  </div>
+</main>
+<script>
+'use strict';
+var URL_9400='https://eip.fia.gov.tw/OAI/api/businessRegistration/';
+var URL_ETAX='https://www.etax.nat.gov.tw/etwmain/etw113w1/ban/query';
+var URL_INV='https://www.etax.nat.gov.tw/etwmain/etw113w3/ban/query';
+var URL_AI='https://api.anthropic.com/v1/messages';
+var MODEL='claude-sonnet-4-20250514';
+var store={};var hist=[];var busy=false;
+
+function switchTab(i){document.querySelectorAll('.tab').forEach(function(t,j){t.classList.toggle('on',i===j);});document.querySelectorAll('.tab-pane').forEach(function(p,j){p.classList.toggle('on',i===j);});}
+function onInput(el){el.value=el.value.replace(/\D/g,'').slice(0,8);document.getElementById('ctr').textContent=el.value.length+' / 8';}
+function fill(b){var el=document.getElementById('banIn');el.value=b;document.getElementById('ctr').textContent=b.length+' / 8';el.focus();}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
+
+// 統編驗算：總和 %10 = 0 或 7
+function chkBan(ban){
+  if(!/^\d{8}$/.test(ban))return false;
+  var w=[1,2,1,2,1,2,4,1],t=0;
+  for(var i=0;i<8;i++){var p=parseInt(ban[i])*w[i];t+=Math.floor(p/10)+(p%10);}
+  return t%10===0||t%10===7;
+}
+
+// 從物件取值（精確比對 + key 包含比對）
+function pick(obj,keys){
+  if(!obj)return '';
+  var ok=Object.keys(obj);
+  for(var i=0;i<keys.length;i++){var v=obj[keys[i]];if(v!==undefined&&v!==null&&String(v).trim())return String(v).trim();}
+  for(var i=0;i<keys.length;i++){for(var j=0;j<ok.length;j++){if(ok[j].indexOf(keys[i])!==-1){var v=obj[ok[j]];if(v!==undefined&&v!==null&&String(v).trim())return String(v).trim();}}}
+  return '';
+}
+
+// 找營業人名稱
+function pickName(obj,ban){
+  if(!obj)return '';
+  var ok=Object.keys(obj);
+  // 實際 key 為 businessNm（從原始欄位確認）
+  var ex=['businessNm','营业人名称','營業人名稱','商號名稱','公司名稱','業者名稱','單位名稱','BusinessName','CompanyName','Name','name'];
+  for(var i=0;i<ex.length;i++){var v=obj[ex[i]];if(v&&String(v).trim()&&String(v).trim()!==ban)return String(v).trim();}
+  for(var i=0;i<ok.length;i++){var k=ok[i];if(k.indexOf('名稱')!==-1&&k.indexOf('行業')===-1&&k.indexOf('組織')===-1&&k.indexOf('代號')===-1&&k.indexOf('總機構')===-1){var v=obj[k];if(v&&String(v).trim()&&String(v).trim()!==ban)return String(v).trim();}}
+  return '';
+}
+
+// 找登記營業項目
+function pickBiz(obj){
+  if(!obj)return '';
+  var ok=Object.keys(obj);
+  // 實際 key 為 industryNm（從原始欄位確認）
+  var ex2=['industryNm','登記營業項目','營業項目','bizItems','BusinessItems'];
+  for(var i=0;i<ex2.length;i++){var v=String(obj[ex2[i]]||'').trim();if(v)return v;}
+  // 找多個行業名稱：industryNm, industryNm1, industryNm2...
+  var arr=[];
+  for(var i=0;i<ok.length;i++){var k=ok[i];var v=String(obj[k]||'').trim();if(!v)continue;
+    if(k==='industryNm'||/^industryNm\d*$/.test(k)||k==='名稱'||/^名稱\d+$/.test(k)){if(arr.indexOf(v)===-1)arr.push(v);}
+  }
+  return arr.join('、');
+}
+
+// 日期格式化
+function fmtD(s){if(!s)return '—';s=String(s).replace(/\D/g,'');if(s.length===7)return '民國 '+parseInt(s.slice(0,3))+' 年 '+s.slice(3,5)+' 月 '+s.slice(5,7)+' 日';return s||'—';}
+
+async function doQuery(){
+  var ban=document.getElementById('banIn').value.trim();
+  if(ban.length!==8){alert('請輸入完整的 8 碼統一編號');return;}
+  if(store[ban]){alert('統編 '+ban+' 已在結果中');return;}
+  document.getElementById('banIn').value='';
+  document.getElementById('ctr').textContent='0 / 8';
+  await runQuery(ban);
+}
+
+async function doBatch(){
+  if(busy){alert('查驗進行中');return;}
+  var lines=document.getElementById('batchArea').value;
+  var bans=[],seen={};
+  lines.split(/[\n,，\s]+/).forEach(function(b){b=b.trim().replace(/\D/g,'');if(b.length===8&&!seen[b]){bans.push(b);seen[b]=1;}});
+  if(!bans.length){alert('請輸入至少一個有效的 8 碼統一編號');return;}
+  var todo=bans.filter(function(b){return !store[b];});
+  if(!todo.length){alert('所有統編均已查驗');return;}
+  busy=true;
+  var pw=document.getElementById('progWrap'),pf=document.getElementById('progFill'),pt=document.getElementById('progTxt');
+  pw.style.display='block';
+  for(var i=0;i<todo.length;i++){
+    pt.textContent='查驗中 '+(i+1)+' / '+todo.length+'：'+todo[i];
+    pf.style.width=Math.round(i/todo.length*100)+'%';
+    await runQuery(todo[i]);
+    if(i<todo.length-1)await sleep(400);
+  }
+  pf.style.width='100%';pt.textContent='✅ 完成！共查驗 '+todo.length+' 筆';
+  setTimeout(function(){pw.style.display='none';},4000);
+  busy=false;
+}
+
+async function runQuery(ban){
+  var ckOk=chkBan(ban);
+  var list=document.getElementById('resList');
+  document.getElementById('resSec').style.display='block';
+
+  // 格式錯誤直接渲染
+  if(!ckOk){render(ban,null,false,'ck',null,list);return;}
+
+  // Loading
+  var ldiv=document.createElement('div');
+  ldiv.className='loading';ldiv.id='ld_'+ban;
+  ldiv.innerHTML='<div class="spin"></div><div><div style="font-size:13px;color:var(--gray)"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div><div style="font-size:10.5px;color:var(--gray);margin-top:2px">步驟1：查詢財政部資料集9400…</div></div>';
+  list.prepend(ldiv);
+
+  // Step 1：9400
+  var d9400=null,src='';
+  try{
+    var r=await fetch(URL_9400+ban,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(10000)});
+    if(r.ok){var j=await r.json();if(j&&!(Array.isArray(j)&&j.length===0)){d9400=Array.isArray(j)?j[0]:j;src='9400';console.log('[9400]',ban,d9400);}}
+  }catch(e){console.warn('[9400 err]',e);}
+
+  // Step 2：無資料 → AI 完整查
+  var aiData=null;
+  if(!d9400){
+    ldiv.innerHTML='<div class="spin blue"></div><div><div style="font-size:13px;color:var(--blue)"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div><div style="font-size:10.5px;color:var(--gray);margin-top:2px">步驟2：Claude AI 查詢財政部稅務入口網…</div></div>';
+    try{aiData=await queryAI(ban);src='ai';}catch(e){src='fail';console.warn('[AI err]',e);}
+
+  // Step 3：有資料但缺名稱/負責人 → AI 補查
+  }else{
+    var noName=!pickName(d9400,ban);
+    var noPrin=!pick(d9400,['responsible','responsibleName','負責人姓名','負責人','Principal','principal','representativeName','personInCharge']);
+    if(noName||noPrin){
+      ldiv.innerHTML='<div class="spin blue"></div><div><div style="font-size:13px;color:var(--blue)"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div><div style="font-size:10.5px;color:var(--gray);margin-top:2px">步驟2：Claude AI 補查缺失欄位…</div></div>';
+      try{
+        var sup=await queryAI(ban);
+        if(sup){
+          if(sup.name&&noName)      d9400['businessNm']=sup.name;
+          if(sup.principal&&noPrin) d9400['負責人姓名']=sup.principal;
+          if(sup.orgType)           d9400['businessType']=sup.orgType;
+          if(sup.bizItems)          d9400['industryNm']=sup.bizItems;
+          if(sup.invoiceFlag&&sup.invoiceFlag!=='null') d9400['isUseInvoice']=sup.invoiceFlag;
+          src='9400+AI';
+        }
+      }catch(e){console.warn('[AI sup err]',e);}
+    }
+  }
+
+  ldiv.remove();
+  render(ban,d9400,true,src,aiData,list);
+}
+
+async function queryAI(ban){
+  var prompt=
+    '請用 web_search 工具搜尋台灣統一編號「'+ban+'」的財政部稅籍公示資料。\n\n'+
+    '請搜尋以下關鍵字：「'+ban+' site:etax.nat.gov.tw」\n'+
+    '或：「'+ban+' 財政部稅籍 營業狀況 營業人名稱」\n\n'+
+    '重點：此商家可能是「非營業中」或「停業」，請務必如實回報 status 欄位。\n'+
+    '若查到「非營業中」「停業」「撤銷」「廢止」等字樣，statusOk 請填 false。\n'+
+    '若查到「營業中」，statusOk 請填 true。\n\n'+
+    '只回傳 JSON，不要其他文字：\n'+
+    '{"name":"營業人名稱","status":"營業中或非營業中或停業等","statusOk":true或false,'+
+    '"address":"地址","orgType":"組織種類","setupDate":"設立日期",'+
+    '"invoiceFlag":"Y或N或null","capital":"資本額","bizItems":"登記營業項目",'+
+    '"confidence":"high或medium或low","source":"資料來源網址"}';
+
+  var resp=await fetch(URL_AI,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:MODEL,
+      max_tokens:1500,
+      tools:[{type:'web_search_20250305',name:'web_search'}],
+      messages:[{role:'user',content:prompt}]
+    })
+  });
+  if(!resp.ok)throw new Error('HTTP '+resp.status);
+  var data=await resp.json();
+  var text='';
+  (data.content||[]).forEach(function(b){if(b.type==='text')text+=b.text;});
+  text=text.replace(/```json|```/g,'').trim();
+  var s=text.indexOf('{'),e=text.lastIndexOf('}');
+  if(s<0||e<0)throw new Error('No JSON');
+  return JSON.parse(text.slice(s,e+1));
+}
+
+function render(ban,d,ckOk,src,ai,container){
+  var badgeCls,badgeTxt,assessCls,assessHTML,srcCls,srcTxt;
+
+  if(src==='ck'){
+    badgeCls='b-err';badgeTxt='格式錯誤';srcCls='sp-ck';srcTxt='驗算失敗';assessCls='err';
+    assessHTML='❌ 統一編號格式不正確（檢查碼驗算失敗）。<br>此統編疑似誤植或偽造，建議退回重開，不予核銷。';
+
+  }else if(d){
+    srcCls=(src==='9400+AI')?'sp-mix':'sp-9400';
+    srcTxt=(src==='9400+AI')?'9400 + AI補查':'資料集 9400';
+    var inv=pick(d,['isUseInvoice','使用統一發票','InvoiceFlag','invoiceFlag']);
+    if(inv==='N'){
+      badgeCls='b-exempt';badgeTxt='免開統一發票';assessCls='warn';
+      assessHTML='⚠ 此商家為<b>免用統一發票</b>之小規模營業人（使用統一發票＝N）。<br>應取得「<b>收據</b>」或「<b>普通收據</b>」入帳，而非統一發票格式。<br>請依公司報支規定判斷是否可核銷。';
+    }else{
+      badgeCls='b-ok';badgeTxt=(inv==='Y')?'正常╱使用統一發票':'正常營業';assessCls='ok';
+      assessHTML='✅ 商家稅籍登記正常（資料集9400僅收錄營業中資料）。<br>'+(inv==='Y'?'使用統一發票，進項稅額可申報扣抵，可依正常程序核銷。':'請至財政部官網確認是否使用統一發票後，再決定核銷方式。');
+    }
+
+  }else if(ai){
+    srcCls='sp-ai';srcTxt='Claude AI';
+    var aok=ai.statusOk,ainv=ai.invoiceFlag,ast=ai.status||'';
+    if(!aok&&ast&&ast!=='營業中'){
+      // 非營業中：顯示紅色警告，但仍顯示商家資訊
+      badgeCls='b-err';badgeTxt=ast||'非正常';assessCls='err';
+      assessHTML='❌ 此商家稅籍狀態為「<b>'+esc(ast)+'</b>」，並非正常營業中。<br>'+
+        '此發票/收據來源有問題，<b>建議暫緩核銷</b>並向財政部查核。';
+    }else if(ainv==='N'){
+      badgeCls='b-exempt';badgeTxt='免開統一發票';assessCls='warn';
+      assessHTML='⚠ 此商家為<b>免用統一發票</b>之小規模營業人。<br>應取得「<b>收據</b>」入帳，請依公司規定判斷是否可核銷。';
+    }else if(aok||ast==='營業中'){
+      badgeCls='b-ok';badgeTxt=(ainv==='Y')?'正常╱使用統一發票':'正常營業';assessCls='ok';
+      assessHTML='✅ 此商家稅籍狀態正常（'+esc(ast)+'）。<br>'+(ainv==='Y'?'使用統一發票，可依正常程序核銷。':ainv==='N'?'⚠ 免開統一發票，應以收據入帳。':'請至財政部官網確認是否使用統一發票，再決定核銷方式。');
+    }else{
+      badgeCls='b-unk';badgeTxt='需人工確認';assessCls='unk';
+      assessHTML='⚠ AI 解析結果信心度較低（'+esc(ai.confidence||'?')+'）。<br>請至財政部稅務入口網人工確認後再決定是否核銷。';
+    }
+  }else{
+    srcCls='sp-fail';srcTxt='需人工確認';badgeCls='b-unk';badgeTxt='需人工確認';assessCls='unk';
+    assessHTML='⚠ 自動查詢失敗（AI 無法取得資料）。<br>'+
+      '此統編可能為<b>非營業中、已撤銷或停業</b>的商家，9400 資料集不收錄。<br>'+
+      '請點擊下方「財政部稅籍查詢」，在官網輸入統編 <b>'+esc(ban)+'</b> 確認。';
+  }
+
+  var name,inv2,invTxt,invCls,prin,setup,addr,capital,biz;
+  if(d){
+    name   =pickName(d,ban)||'（未提供）';
+    inv2   =pick(d,['isUseInvoice','使用統一發票','InvoiceFlag','invoiceFlag']);
+    invTxt =inv2==='Y'?'✅ 使用統一發票':inv2==='N'?'⚠ 免開統一發票':'（有登記，請確認）';
+    invCls =inv2==='Y'?'ok':inv2==='N'?'warn':'blue';
+    prin   =pick(d,['responsible','responsibleName','負責人姓名','負責人','Principal','principal','representativeName','personInCharge']);
+    setup  =pick(d,['businessSetupDate','設立日期','SetupDate','setupDate','RegisterDate']);
+    addr   =pick(d,['businessAddress','營業地址','地址','Address','address']);
+    capital=pick(d,['capitalAmount','資本額','Capital','capital']);
+    biz    =pickBiz(d);
+  }else if(ai){
+    name=ai.name||'（未提供）';inv2=ai.invoiceFlag||'';
+    invTxt=inv2==='Y'?'✅ 使用統一發票':inv2==='N'?'⚠ 免開統一發票':'未查到';
+    invCls=inv2==='Y'?'ok':inv2==='N'?'warn':'';
+    prin=ai.principal||'—';setup=ai.setupDate||'—';addr=ai.address||'—';capital=ai.capital||'—';biz=ai.bizItems||'—';
+  }else{name='（查無資料）';}
+
+  var capFmt='—';
+  if(capital&&capital!=='—'){var n=parseInt(String(capital).replace(/,/g,''));capFmt=isNaN(n)?capital:n.toLocaleString();}
+
+  var bodyHTML='';
+  if(d||ai){
+    var stTxt=d?'✅ 正常（9400僅收錄營業中）':(ai&&ai.status?'✅ '+esc(ai.status):'✅ 正常');
+    bodyHTML=
+      '<div class="res-body">'+
+        '<div style="grid-column:1/-1"><div class="fk">營業人名稱</div><div class="fv big">'+esc(name)+'</div></div>'+
+        '<div><div class="fk">營業狀況</div><div class="fv ok">'+stTxt+'</div></div>'+
+        '<div><div class="fk">統一發票</div><div class="fv '+invCls+'">'+invTxt+'</div></div>'+
+        '<div><div class="fk">設立日期</div><div class="fv">'+fmtD(setup)+'</div></div>'+
+        '<div><div class="fk">資本額（元）</div><div class="fv">'+esc(capFmt)+'</div></div>'+
+        '<div style="grid-column:1/-1"><div class="fk">登記地址</div><div class="fv">'+esc(addr||'—')+'</div></div>'+
+        '<div style="grid-column:1/-1"><div class="fk">登記營業項目</div><div class="fv" style="font-size:12px">'+esc(biz||'—')+'</div></div>'+
+      '</div>';
+    if(ai&&!d){var cf=ai.confidence||'?';var cc=cf==='high'?'var(--green)':cf==='medium'?'var(--gold)':'var(--red)';bodyHTML+='<div style="margin:0 18px 8px;font-size:10.5px;color:var(--gray)">AI來源：'+esc(ai.source||'財政部稅務入口網')+'　信心度：<span style="color:'+cc+';font-weight:600">'+cf+'</span></div>';}
+  }
+
+  var rawHTML='';
+  if(d){
+    var rows2=Object.keys(d).map(function(k){return '<tr><td>'+esc(k)+'</td><td>'+esc(String(d[k]!==null&&d[k]!==undefined?d[k]:''))+'</td></tr>';}).join('');
+    rawHTML='<details class="raw"><summary>原始 API 欄位（點擊展開）</summary><table class="raw-tbl">'+rows2+'</table></details>';
+  }
+
+  var card=document.createElement('div');
+  card.className='res-card';card.id='rc_'+ban;
+  card.innerHTML=
+    '<div class="res-hdr">'+
+      '<div class="co-blk">'+
+        '<div class="co-name">'+esc(name)+'</div>'+
+        '<div class="co-ban">統編 '+ban+' '+(ckOk?'<span style="color:var(--green)">✓ 格式正確</span>':'<span style="color:var(--red)">✗ 格式異常</span>')+'</div>'+
+      '</div>'+
+      '<span class="src-pill '+srcCls+'">'+srcTxt+'</span>'+
+      '<span class="badge '+badgeCls+'">'+badgeTxt+'</span>'+
+    '</div>'+
+    bodyHTML+
+    '<div class="assess '+assessCls+'">'+assessHTML+'</div>'+
+    rawHTML+
+    '<div class="res-acts">'+
+      '<a class="btn-link blue" href="'+URL_ETAX+'" target="_blank">🔗 財政部稅籍查詢</a>'+
+      '<a class="btn-link blue" href="'+URL_INV+'" target="_blank">📋 免開發票查詢</a>'+
+      (d?'<a class="btn-link red" href="'+URL_9400+ban+'" target="_blank">📄 9400 API</a>':'')+
+      '<button class="btn-del" onclick="delCard(\''+ban+'\')">✕ 移除</button>'+
+    '</div>';
+
+  container.prepend(card);
+
+  var invDisp=(inv2==='Y')?'使用統一發票':(inv2==='N')?'免開統一發票':'（有登記）';
+  store[ban]={ban:ban,name:name,badge:badgeTxt,assess:assessHTML.replace(/<[^>]+>/g,''),src:src,inv:invDisp,cls:badgeCls,time:new Date().toLocaleTimeString('zh-TW')};
+  addHist(ban,name,badgeTxt,badgeCls);
+  document.getElementById('expRow').style.display='flex';
+}
+
+function addHist(ban,name,badge,cls){
+  var dot=cls==='b-ok'?'d-ok':cls==='b-exempt'?'d-ex':cls==='b-err'?'d-err':'d-unk';
+  hist.unshift({ban:ban,name:name,badge:badge,dot:dot,time:new Date().toLocaleTimeString('zh-TW')});
+  renderHist();
+}
+function renderHist(){
+  var el=document.getElementById('histBody');
+  if(!hist.length){el.innerHTML='<div class="empty"><div class="empty-ico">🗂</div>尚無查詢記錄</div>';return;}
+  var rows=hist.map(function(r){var s=store[r.ban]||{};return '<tr><td style="font-family:JetBrains Mono,monospace;letter-spacing:.1em">'+r.ban+'</td><td>'+esc(r.name)+'</td><td><span class="dot '+r.dot+'"></span>'+esc(r.badge)+'</td><td style="font-size:10px;color:var(--gray)">'+esc(s.src||'')+'</td><td style="font-size:10px;color:var(--gray)">'+r.time+'</td></tr>';}).join('');
+  el.innerHTML='<table class="hist-tbl"><thead><tr><th>統一編號</th><th>名稱</th><th>狀態</th><th>來源</th><th>時間</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+function clearAll(){if(!confirm('確定要清除所有查驗結果與記錄？'))return;store={};hist=[];renderHist();document.getElementById('resList').innerHTML='';document.getElementById('resSec').style.display='none';document.getElementById('expRow').style.display='none';}
+function delCard(ban){var el=document.getElementById('rc_'+ban);if(el)el.remove();delete store[ban];if(!Object.keys(store).length)document.getElementById('expRow').style.display='none';}
+
+function toCSV(){var rows=[['統一編號','營業人名稱','狀態','統一發票','資料來源','會計建議','查詢時間']];Object.values(store).forEach(function(r){rows.push([r.ban,r.name,r.badge,r.inv,r.src,r.assess,r.time]);});var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');dl('\uFEFF'+csv,'統編查驗_'+today()+'.csv','text/csv;charset=utf-8');}
+function toTXT(){var t='發票統編查驗報告\n產製時間：'+new Date().toLocaleString('zh-TW')+'\n'+'═'.repeat(48)+'\n\n';Object.values(store).forEach(function(r){t+='統一編號：'+r.ban+'\n營業人名稱：'+r.name+'\n狀態：'+r.badge+'\n統一發票：'+r.inv+'\n資料來源：'+r.src+'\n會計建議：'+r.assess+'\n'+'─'.repeat(38)+'\n\n';});dl(t,'統編查驗_'+today()+'.txt','text/plain;charset=utf-8');}
+function dl(c,f,t){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=f;a.click();}
+function today(){return new Date().toISOString().slice(0,10);}
+</script>
+</body>
+</html>
