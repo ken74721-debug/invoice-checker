@@ -168,7 +168,7 @@ details.raw[open] summary::before{content:'▼ ';}
         </div>
         <div class="smps">
           <span class="smps-lbl">範例：</span>
-          <button class="smp" onclick="fill('04595297')">04595297 統一超商</button>
+          <button class="smp" onclick="fill('22555003')">22555003 統一超商</button>
           <button class="smp" onclick="fill('23622647')">23622647 全家便利</button>
           <button class="smp" onclick="fill('87018196')">87018196 獨資行號</button>
           <button class="smp" onclick="fill('76611635')">76611635 來來鎖匙</button>
@@ -217,7 +217,7 @@ var URL_9400='https://eip.fia.gov.tw/OAI/api/businessRegistration/';
 var URL_ETAX='https://www.etax.nat.gov.tw/etwmain/etw113w1/ban/query';
 var URL_INV='https://www.etax.nat.gov.tw/etwmain/etw113w3/ban/query';
 var URL_AI='https://api.anthropic.com/v1/messages';
-var MODEL='claude-sonnet-4-20250514';
+var MODEL='claude-sonnet-4-6';
 // ★ Cloudflare Worker URL
 var WORKER_URL='https://invoice-checker.ken74721.workers.dev';
 var store={};var hist=[];var busy=false;
@@ -370,11 +370,12 @@ function setLoading(div, ban, blue, msg){
 async function queryAI(ban){
   var prompt=
     '請用 web_search 查詢台灣統一編號「'+ban+'」的財政部稅籍公示資料。\n'+
-    '搜尋：「'+ban+' 統一編號 財政部 稅籍 營業狀況」\n'+
-    '從 etax.nat.gov.tw 取得：營業人名稱、營業狀況、地址、組織種類、設立日期、資本額、登記營業項目、是否使用統一發票。\n'+
+    '搜尋：「'+ban+' 統一編號 財政部 稅籍 營業狀況 營業人名稱」\n'+
+    '從 etax.nat.gov.tw 取得：營業人名稱、營業狀況（營業中/非營業中/停業）、地址、組織種類、設立日期、資本額、登記營業項目、是否使用統一發票。\n'+
     '只回傳 JSON，不要其他文字：\n'+
-    '{"name":"","status":"","statusOk":true,"address":"","orgType":"","setupDate":"","capital":"","invoiceFlag":"Y或N或null","bizItems":"","confidence":"high或medium或low","source":""}';
+    '{"name":"","status":"","statusOk":true或false,"address":"","orgType":"","setupDate":"","capital":"","invoiceFlag":"Y或N或null","bizItems":"","confidence":"high或medium或low","source":""}';
 
+  console.log('[queryAI] calling worker:', WORKER_URL+'/api/claude');
   var resp=await fetch(WORKER_URL+'/api/claude',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -385,13 +386,19 @@ async function queryAI(ban){
       messages:[{role:'user',content:prompt}]
     })
   });
-  if(!resp.ok)throw new Error('HTTP '+resp.status);
+  console.log('[queryAI] response status:', resp.status);
+  if(!resp.ok){
+    var errText=await resp.text();
+    console.error('[queryAI] error body:', errText);
+    throw new Error('HTTP '+resp.status+': '+errText.slice(0,200));
+  }
   var data=await resp.json();
+  console.log('[queryAI] raw response:', JSON.stringify(data).slice(0,500));
   var text='';
   (data.content||[]).forEach(function(b){if(b.type==='text')text+=b.text;});
   text=text.replace(/```json|```/g,'').trim();
   var s=text.indexOf('{'),e2=text.lastIndexOf('}');
-  if(s<0||e2<0)throw new Error('No JSON');
+  if(s<0||e2<0)throw new Error('No JSON in response: '+text.slice(0,200));
   return JSON.parse(text.slice(s,e2+1));
 }
 
