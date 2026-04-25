@@ -310,75 +310,58 @@ async function runQuery(ban){
   var list=document.getElementById('resList');
   document.getElementById('resSec').style.display='block';
 
-  // 格式錯誤直接渲染
   if(!ckOk){render(ban,null,false,'ck',null,list);return;}
 
   // Loading
   var ldiv=document.createElement('div');
   ldiv.className='loading';ldiv.id='ld_'+ban;
-  ldiv.innerHTML='<div class="spin"></div><div><div style="font-size:13px;color:var(--gray)"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div><div style="font-size:10.5px;color:var(--gray);margin-top:2px">步驟1：查詢財政部資料集9400…</div></div>';
+  ldiv.innerHTML='<div class="spin blue"></div><div>'+
+    '<div style="font-size:13px;color:var(--blue)"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div>'+
+    '<div style="font-size:10.5px;color:var(--gray);margin-top:2px">Claude AI 查詢財政部稅務入口網…</div></div>';
   list.prepend(ldiv);
 
-  // Step 1：9400（先直連，失敗自動改用 CORS Proxy）
-  var d9400=null,src='';
+  // 直接用 Claude AI 查（解決 CORS 問題，同時涵蓋大小商家）
+  var aiData=null,src='fail';
   try{
-    var targetUrl=URL_9400+ban;
-    var ctrl=new AbortController();
-    var tid=setTimeout(function(){ctrl.abort();},8000);
-    var r=await fetch(targetUrl,{headers:{Accept:'application/json'},signal:ctrl.signal});
-    clearTimeout(tid);
-    if(r.ok){var j=await r.json();if(j&&!(Array.isArray(j)&&j.length===0)){d9400=Array.isArray(j)?j[0]:j;src='9400';console.log('[9400 direct]',ban,d9400);}}
+    aiData=await queryAI(ban);
+    src='ai';
   }catch(e){
-    console.warn('[9400 direct failed, try proxy]',e.message||e);
-    // 直連失敗 → 改用 CORS Proxy
-    try{
-      var ctrl2=new AbortController();
-      var tid2=setTimeout(function(){ctrl2.abort();},12000);
-      var r2=await fetch(PROXY+encodeURIComponent(URL_9400+ban),{headers:{Accept:'application/json'},signal:ctrl2.signal});
-      clearTimeout(tid2);
-      if(r2.ok){var j2=await r2.json();if(j2&&!(Array.isArray(j2)&&j2.length===0)){d9400=Array.isArray(j2)?j2[0]:j2;src='9400';console.log('[9400 proxy]',ban,d9400);}}
-    }catch(e2){console.warn('[9400 proxy failed]',e2.message||e2);}
-  }
-
-  // Step 2：無資料 → AI 完整查
-  var aiData=null;
-  if(!d9400){
-    ldiv.innerHTML='<div class="spin blue"></div><div><div style="font-size:13px;color:var(--blue)"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div><div style="font-size:10.5px;color:var(--gray);margin-top:2px">步驟2：Claude AI 查詢財政部稅務入口網…</div></div>';
-    try{aiData=await queryAI(ban);src='ai';}catch(e){src='fail';console.warn('[AI err]',e);}
-
-  // Step 3：有資料但缺名稱/負責人 → AI 補查
-  }else{
-    var noName=!pickName(d9400,ban);
-    var noPrin=!pick(d9400,['responsible','responsibleName','負責人姓名','負責人','Principal','principal','representativeName','personInCharge']);
-    if(noName||noPrin){
-      ldiv.innerHTML='<div class="spin blue"></div><div><div style="font-size:13px;color:var(--blue)"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div><div style="font-size:10.5px;color:var(--gray);margin-top:2px">步驟2：Claude AI 補查缺失欄位…</div></div>';
-      try{
-        var sup=await queryAI(ban);
-        if(sup){
-          if(sup.name&&noName)      d9400['businessNm']=sup.name;
-          if(sup.principal&&noPrin) d9400['負責人姓名']=sup.principal;
-          if(sup.orgType)           d9400['businessType']=sup.orgType;
-          if(sup.bizItems)          d9400['industryNm']=sup.bizItems;
-          if(sup.invoiceFlag&&sup.invoiceFlag!=='null') d9400['isUseInvoice']=sup.invoiceFlag;
-          src='9400+AI';
-        }
-      }catch(e){console.warn('[AI sup err]',e);}
-    }
+    src='fail';
+    console.warn('[AI err]',e);
   }
 
   ldiv.remove();
-  render(ban,d9400,true,src,aiData,list);
+  render(ban,null,true,src,aiData,list);
 }
 
 async function queryAI(ban){
-  var prompt='請用 web_search 搜尋台灣統一編號「'+ban+'」的財政部稅籍公示資料。\n'+
-    '搜尋：'+ban+' 財政部 稅籍 營業人名稱 負責人\n'+
-    '從 etax.nat.gov.tw 找出：營業人名稱、負責人、營業狀況、地址、組織種類、設立日期、登記營業項目、是否使用統一發票。\n'+
-    '只回傳 JSON，不要其他文字：\n'+
-    '{"name":"","status":"","statusOk":true,"principal":"","address":"","orgType":"","setupDate":"","invoiceFlag":"Y或N","capital":"","bizItems":"","confidence":"high或medium或low","source":""}';
-  var resp=await fetch(URL_AI,{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:MODEL,max_tokens:1200,tools:[{type:'web_search_20250305',name:'web_search'}],
-    messages:[{role:'user',content:prompt}]})});
+  var prompt=
+    '請用 web_search 工具查詢台灣統一編號「'+ban+'」的完整稅籍資料。\n\n'+
+    '請搜尋以下關鍵字（請確實執行搜尋）：\n'+
+    '1. 「'+ban+' site:etax.nat.gov.tw」\n'+
+    '2. 「'+ban+' 統一編號 營業人名稱 財政部」\n\n'+
+    '從財政部稅務入口網 etax.nat.gov.tw 找出：\n'+
+    '- 營業人名稱（店名或公司名）\n'+
+    '- 營業狀況（營業中 / 停業 / 撤銷等）\n'+
+    '- 登記地址\n'+
+    '- 組織種類（獨資/合夥/公司）\n'+
+    '- 設立日期\n'+
+    '- 資本額\n'+
+    '- 登記營業項目\n'+
+    '- 是否使用統一發票（Y=使用，N=免開）\n\n'+
+    '【重要】只回傳以下 JSON 格式，不要任何說明文字：\n'+
+    '{"name":"","status":"","statusOk":true,"address":"","orgType":"","setupDate":"","capital":"","invoiceFlag":"Y或N或null","bizItems":"","confidence":"high或medium或low","source":""}';
+
+  var resp=await fetch(URL_AI,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:MODEL,
+      max_tokens:1200,
+      tools:[{type:'web_search_20250305',name:'web_search'}],
+      messages:[{role:'user',content:prompt}]
+    })
+  });
   if(!resp.ok)throw new Error('HTTP '+resp.status);
   var data=await resp.json();
   var text='';
