@@ -351,12 +351,46 @@ async function runQuery(ban){
     }catch(e2){console.warn('[9400 err]',e2.message||e2);}
   }
 
-  // Step 3：兩者都查無 → Claude AI 補查
+  // Step 3：兩者都查無 → 先試 twincn.com，再 Claude AI
   var aiData=null;
   if(!etaxData&&!d9400){
-    setLoading(ldiv, ban, true, '步驟3：Claude AI 查詢財政部官網…');
-    try{aiData=await queryAI(ban);src='ai';}
-    catch(e){src='fail';console.warn('[AI err]',e);}
+    // Step 3a：twincn.com（有非營業資料）
+    setLoading(ldiv, ban, false, '步驟3：查詢商業登記資料庫…');
+    var twincnData=null;
+    try{
+      var ctrl3=new AbortController();
+      var tid3=setTimeout(function(){ctrl3.abort();},10000);
+      var r3=await fetch(WORKER_URL+'/api/twincn/'+ban,{signal:ctrl3.signal});
+      clearTimeout(tid3);
+      if(r3.ok){
+        var j3=await r3.json();
+        if(j3&&j3.found){twincnData=j3;console.log('[twincn found]',ban,j3);}
+        else{console.log('[twincn] not found',j3);}
+      }
+    }catch(e3){console.warn('[twincn err]',e3.message||e3);}
+
+    if(twincnData){
+      // 用 twincn 資料建立 aiData 格式
+      aiData={
+        name: twincnData.name,
+        status: twincnData.status,
+        statusOk: twincnData.statusOk,
+        address: twincnData.address||'',
+        orgType: twincnData.orgType||'',
+        setupDate: twincnData.setupDate||'',
+        capital: twincnData.capital||'',
+        invoiceFlag: null,
+        bizItems: twincnData.bizItems||'',
+        confidence: 'high',
+        source: 'twincn.com（台灣公司網）'
+      };
+      src='twincn';
+    } else {
+      // Step 3b：Claude AI 最後手段
+      setLoading(ldiv, ban, true, '步驟4：Claude AI 查詢財政部官網…');
+      try{aiData=await queryAI(ban);src='ai';}
+      catch(e){src='fail';console.warn('[AI err]',e);}
+    }
   }
 
   ldiv.remove();
