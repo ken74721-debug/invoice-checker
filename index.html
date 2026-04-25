@@ -313,50 +313,58 @@ async function runQuery(ban){
 
   var ldiv=document.createElement('div');
   ldiv.className='loading';ldiv.id='ld_'+ban;
-  ldiv.innerHTML='<div class="spin blue"></div><div>'+
-    '<div style="font-size:13px;color:var(--blue)"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div>'+
-    '<div style="font-size:10.5px;color:var(--gray);margin-top:2px">步驟1：查詢財政部資料集9400…</div></div>';
+  setLoading(ldiv, ban, false, '步驟1：查詢財政部稅務入口網…');
   list.prepend(ldiv);
 
-  // Step 1：透過 Worker 查 9400
-  var d9400=null,src='';
+  // Step 1：直接抓財政部稅務網 HTML（最準確）
+  var etaxData=null, d9400=null, src='';
   try{
     var ctrl=new AbortController();
-    var tid=setTimeout(function(){ctrl.abort();},10000);
-    var r=await fetch(WORKER_URL+'/api/ban/'+ban,{signal:ctrl.signal});
+    var tid=setTimeout(function(){ctrl.abort();},12000);
+    var r=await fetch(WORKER_URL+'/api/etax/'+ban,{signal:ctrl.signal});
     clearTimeout(tid);
     if(r.ok){
       var j=await r.json();
-      if(j&&!(Array.isArray(j)&&j.length===0)&&!j.error){
-        d9400=Array.isArray(j)?j[0]:j;
-        src='9400';
-        console.log('[9400]',ban,d9400);
-      }
+      if(j&&j.found){etaxData=j;src='etax';console.log('[etax]',ban,j);}
+      else{console.log('[etax] not found',j);}
     }
-  }catch(e){console.warn('[9400 err]',e.message||e);}
+  }catch(e){console.warn('[etax err]',e.message||e);}
 
-  // Step 2：無資料或缺欄位 → Claude AI 補查
-  var aiData=null;
-  var noName=d9400&&!pickName(d9400,ban);
-  if(!d9400||noName){
-    ldiv.innerHTML='<div class="spin blue"></div><div>'+
-      '<div style="font-size:13px;color:var(--blue)"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div>'+
-      '<div style="font-size:10.5px;color:var(--gray);margin-top:2px">步驟2：Claude AI 查詢財政部官網…</div></div>';
+  // Step 2：若財政部網頁查無 → 試 9400
+  if(!etaxData){
+    setLoading(ldiv, ban, false, '步驟2：查詢財政部資料集9400…');
     try{
-      aiData=await queryAI(ban);
-      if(!d9400){src='ai';}
-      else{
-        // 用 AI 補填缺失欄位
-        if(aiData.name)     d9400['businessNm']=aiData.name;
-        if(aiData.bizItems) d9400['industryNm']=aiData.bizItems;
-        if(aiData.invoiceFlag&&aiData.invoiceFlag!=='null') d9400['isUseInvoice']=aiData.invoiceFlag;
-        src='9400+AI'; aiData=null;
+      var ctrl2=new AbortController();
+      var tid2=setTimeout(function(){ctrl2.abort();},10000);
+      var r2=await fetch(WORKER_URL+'/api/ban/'+ban,{signal:ctrl2.signal});
+      clearTimeout(tid2);
+      if(r2.ok){
+        var j2=await r2.json();
+        if(j2&&!(Array.isArray(j2)&&j2.length===0)&&!j2.error){
+          d9400=Array.isArray(j2)?j2[0]:j2;src='9400';
+          console.log('[9400]',ban,d9400);
+        }
       }
-    }catch(e){src=d9400?src:'fail';console.warn('[AI err]',e);}
+    }catch(e2){console.warn('[9400 err]',e2.message||e2);}
+  }
+
+  // Step 3：兩者都查無 → Claude AI 補查
+  var aiData=null;
+  if(!etaxData&&!d9400){
+    setLoading(ldiv, ban, true, '步驟3：Claude AI 查詢財政部官網…');
+    try{aiData=await queryAI(ban);src='ai';}
+    catch(e){src='fail';console.warn('[AI err]',e);}
   }
 
   ldiv.remove();
-  render(ban,d9400,true,src,aiData,list);
+  render(ban, d9400, etaxData, true, src, aiData, list);
+}
+
+function setLoading(div, ban, blue, msg){
+  var c=blue?'var(--blue)':'var(--gray)';
+  div.innerHTML='<div class="spin'+(blue?' blue':'')+'"></div><div>'+
+    '<div style="font-size:13px;color:'+c+'"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div>'+
+    '<div style="font-size:10.5px;color:var(--gray);margin-top:2px">'+esc(msg)+'</div></div>';
 }
 
 async function queryAI(ban){
@@ -387,23 +395,44 @@ async function queryAI(ban){
   return JSON.parse(text.slice(s,e2+1));
 }
 
-function render(ban,d,ckOk,src,ai,container){
+function render(ban, d9400, etax, ckOk, src, ai, container){
+  var d = etax || null; // 優先用 etax 資料
   var badgeCls,badgeTxt,assessCls,assessHTML,srcCls,srcTxt;
 
   if(src==='ck'){
     badgeCls='b-err';badgeTxt='格式錯誤';srcCls='sp-ck';srcTxt='驗算失敗';assessCls='err';
     assessHTML='❌ 統一編號格式不正確（檢查碼驗算失敗）。<br>此統編疑似誤植或偽造，建議退回重開，不予核銷。';
 
-  }else if(d){
-    srcCls=(src==='9400+AI')?'sp-mix':'sp-9400';
-    srcTxt=(src==='9400+AI')?'9400 + AI補查':'資料集 9400';
-    var inv=pick(d,['isUseInvoice','使用統一發票','InvoiceFlag','invoiceFlag']);
-    if(inv==='N'){
+  }else if(etax){
+    // 財政部稅務網直接抓取（最準確）
+    srcCls='sp-9400';srcTxt='財政部稅務網';
+    var status=etax.status||'';
+    var isOk=etax.statusOk;
+    var inv=etax.invoiceFlag;
+
+    if(!isOk&&status){
+      badgeCls='b-err';badgeTxt=status;assessCls='err';
+      assessHTML='❌ 此商家稅籍狀態為「'+esc(status)+'」，並非正常營業中。<br>建議暫緩核銷並向財政部查核。';
+    }else if(inv==='N'){
       badgeCls='b-exempt';badgeTxt='免開統一發票';assessCls='warn';
-      assessHTML='⚠ 此商家為<b>免用統一發票</b>之小規模營業人（使用統一發票＝N）。<br>應取得「<b>收據</b>」或「<b>普通收據</b>」入帳，而非統一發票格式。<br>請依公司報支規定判斷是否可核銷。';
-    }else{
+      assessHTML='⚠ 此商家為<b>免用統一發票</b>之小規模營業人。<br>應取得「<b>收據</b>」入帳，請依公司規定判斷是否可核銷。';
+    }else if(isOk){
       badgeCls='b-ok';badgeTxt=(inv==='Y')?'正常╱使用統一發票':'正常營業';assessCls='ok';
-      assessHTML='✅ 商家稅籍登記正常（資料集9400僅收錄營業中資料）。<br>'+(inv==='Y'?'使用統一發票，進項稅額可申報扣抵，可依正常程序核銷。':'請至財政部官網確認是否使用統一發票後，再決定核銷方式。');
+      assessHTML='✅ 商家稅籍登記正常（'+esc(status)+'）。<br>'+(inv==='Y'?'使用統一發票，可依正常程序核銷。':'請至財政部官網確認是否使用統一發票後，再決定核銷方式。');
+    }else{
+      badgeCls='b-ok';badgeTxt='有稅籍登記';assessCls='ok';
+      assessHTML='✅ 查得稅籍登記資料。<br>請至財政部官網確認營業狀況及是否使用統一發票後，再決定核銷方式。';
+    }
+
+  }else if(d9400){
+    srcCls='sp-9400';srcTxt='資料集 9400';
+    var inv9=pick(d9400,['isUseInvoice','使用統一發票','InvoiceFlag','invoiceFlag']);
+    if(inv9==='N'){
+      badgeCls='b-exempt';badgeTxt='免開統一發票';assessCls='warn';
+      assessHTML='⚠ 此商家為<b>免用統一發票</b>之小規模營業人。<br>應取得「<b>收據</b>」入帳，請依公司報支規定判斷是否可核銷。';
+    }else{
+      badgeCls='b-ok';badgeTxt=(inv9==='Y')?'正常╱使用統一發票':'正常營業';assessCls='ok';
+      assessHTML='✅ 商家稅籍登記正常（資料集9400僅收錄營業中資料）。<br>'+(inv9==='Y'?'使用統一發票，進項稅額可申報扣抵，可依正常程序核銷。':'請至財政部官網確認是否使用統一發票後，再決定核銷方式。');
     }
 
   }else if(ai){
@@ -427,47 +456,65 @@ function render(ban,d,ckOk,src,ai,container){
     assessHTML='⚠ 自動查詢失敗。請至財政部稅務入口網手動確認。';
   }
 
-  var name,inv2,invTxt,invCls,prin,setup,addr,capital,biz;
-  if(d){
-    name   =pickName(d,ban)||'（未提供）';
-    inv2   =pick(d,['isUseInvoice','使用統一發票','InvoiceFlag','invoiceFlag']);
-    invTxt =inv2==='Y'?'✅ 使用統一發票':inv2==='N'?'⚠ 免開統一發票':'（有登記，請確認）';
-    invCls =inv2==='Y'?'ok':inv2==='N'?'warn':'blue';
-    prin   =pick(d,['responsible','responsibleName','負責人姓名','負責人','Principal','principal','representativeName','personInCharge']);
-    setup  =pick(d,['businessSetupDate','設立日期','SetupDate','setupDate','RegisterDate']);
-    addr   =pick(d,['businessAddress','營業地址','地址','Address','address']);
-    capital=pick(d,['capitalAmount','資本額','Capital','capital']);
-    biz    =pickBiz(d);
+  // ── 取欄位值（優先 etax，其次 9400，再 AI）──
+  var name,invTxt,invCls,setup,addr,capital,biz,inv2='';
+  if(etax){
+    name=etax.name||'（未提供）';
+    inv2=etax.invoiceFlag||'';
+    invTxt=inv2==='Y'?'✅ 使用統一發票':inv2==='N'?'⚠ 免開統一發票':'（請至財政部確認）';
+    invCls=inv2==='Y'?'ok':inv2==='N'?'warn':'blue';
+    setup=etax.setupDate||'—';
+    addr=etax.address||'—';
+    capital=etax.capital||'—';
+    biz=etax.bizItems||'—';
+  }else if(d9400){
+    name=pickName(d9400,ban)||'（未提供）';
+    inv2=pick(d9400,['isUseInvoice','使用統一發票','InvoiceFlag','invoiceFlag']);
+    invTxt=inv2==='Y'?'✅ 使用統一發票':inv2==='N'?'⚠ 免開統一發票':'（有登記，請確認）';
+    invCls=inv2==='Y'?'ok':inv2==='N'?'warn':'blue';
+    setup=pick(d9400,['businessSetupDate','設立日期','SetupDate']);
+    addr=pick(d9400,['businessAddress','營業地址','地址','Address']);
+    capital=pick(d9400,['capitalAmount','資本額','Capital']);
+    biz=pickBiz(d9400);
   }else if(ai){
     name=ai.name||'（未提供）';inv2=ai.invoiceFlag||'';
     invTxt=inv2==='Y'?'✅ 使用統一發票':inv2==='N'?'⚠ 免開統一發票':'未查到';
     invCls=inv2==='Y'?'ok':inv2==='N'?'warn':'';
-    prin=ai.principal||'—';setup=ai.setupDate||'—';addr=ai.address||'—';capital=ai.capital||'—';biz=ai.bizItems||'—';
+    setup=ai.setupDate||'—';addr=ai.address||'—';capital=ai.capital||'—';biz=ai.bizItems||'—';
   }else{name='（查無資料）';}
 
   var capFmt='—';
-  if(capital&&capital!=='—'){var n=parseInt(String(capital).replace(/,/g,''));capFmt=isNaN(n)?capital:n.toLocaleString();}
+  if(capital&&capital!=='—'){var n=parseInt(String(capital).replace(/[^0-9]/g,''));capFmt=isNaN(n)?capital:n.toLocaleString();}
+
+  var statusDisplay = etax ? esc(etax.status||'—') : (d9400 ? '✅ 正常（9400僅收錄營業中）' : (ai&&ai.status?esc(ai.status):'—'));
+  var statusCls = etax ? (etax.statusOk?'ok':'err') : 'ok';
 
   var bodyHTML='';
-  if(d||ai){
-    var stTxt=d?'✅ 正常（9400僅收錄營業中）':(ai&&ai.status?'✅ '+esc(ai.status):'✅ 正常');
+  if(etax||d9400||ai){
     bodyHTML=
       '<div class="res-body">'+
         '<div style="grid-column:1/-1"><div class="fk">營業人名稱</div><div class="fv big">'+esc(name)+'</div></div>'+
-        '<div><div class="fk">營業狀況</div><div class="fv ok">'+stTxt+'</div></div>'+
+        '<div><div class="fk">營業狀況</div><div class="fv '+statusCls+'">'+statusDisplay+'</div></div>'+
         '<div><div class="fk">統一發票</div><div class="fv '+invCls+'">'+invTxt+'</div></div>'+
         '<div><div class="fk">設立日期</div><div class="fv">'+fmtD(setup)+'</div></div>'+
         '<div><div class="fk">資本額（元）</div><div class="fv">'+esc(capFmt)+'</div></div>'+
         '<div style="grid-column:1/-1"><div class="fk">登記地址</div><div class="fv">'+esc(addr||'—')+'</div></div>'+
         '<div style="grid-column:1/-1"><div class="fk">登記營業項目</div><div class="fv" style="font-size:12px">'+esc(biz||'—')+'</div></div>'+
       '</div>';
-    if(ai&&!d){var cf=ai.confidence||'?';var cc=cf==='high'?'var(--green)':cf==='medium'?'var(--gold)':'var(--red)';bodyHTML+='<div style="margin:0 18px 8px;font-size:10.5px;color:var(--gray)">AI來源：'+esc(ai.source||'財政部稅務入口網')+'　信心度：<span style="color:'+cc+';font-weight:600">'+cf+'</span></div>';}
+    if(ai&&!etax&&!d9400){
+      var cf=ai.confidence||'?';var cc=cf==='high'?'var(--green)':cf==='medium'?'var(--gold)':'var(--red)';
+      bodyHTML+='<div style="margin:0 18px 8px;font-size:10.5px;color:var(--gray)">AI來源：'+esc(ai.source||'財政部稅務入口網')+'　信心度：<span style="color:'+cc+';font-weight:600">'+cf+'</span></div>';
+    }
   }
 
+  // 原始欄位（etax 或 9400）
   var rawHTML='';
-  if(d){
-    var rows2=Object.keys(d).map(function(k){return '<tr><td>'+esc(k)+'</td><td>'+esc(String(d[k]!==null&&d[k]!==undefined?d[k]:''))+'</td></tr>';}).join('');
-    rawHTML='<details class="raw"><summary>原始 API 欄位（點擊展開）</summary><table class="raw-tbl">'+rows2+'</table></details>';
+  if(etax&&etax.fields){
+    var rows2=Object.keys(etax.fields).map(function(k){return '<tr><td>'+esc(k)+'</td><td>'+esc(etax.fields[k])+'</td></tr>';}).join('');
+    rawHTML='<details class="raw"><summary>原始欄位（點擊展開）</summary><table class="raw-tbl">'+rows2+'</table></details>';
+  }else if(d9400){
+    var rows3=Object.keys(d9400).map(function(k){return '<tr><td>'+esc(k)+'</td><td>'+esc(String(d9400[k]!==null&&d9400[k]!==undefined?d9400[k]:''))+'</td></tr>';}).join('');
+    rawHTML='<details class="raw"><summary>原始欄位（點擊展開）</summary><table class="raw-tbl">'+rows3+'</table></details>';
   }
 
   var card=document.createElement('div');
@@ -487,13 +534,13 @@ function render(ban,d,ckOk,src,ai,container){
     '<div class="res-acts">'+
       '<a class="btn-link blue" href="'+URL_ETAX+'" target="_blank">🔗 財政部稅籍查詢</a>'+
       '<a class="btn-link blue" href="'+URL_INV+'" target="_blank">📋 免開發票查詢</a>'+
-      (d?'<a class="btn-link red" href="'+URL_9400+ban+'" target="_blank">📄 9400 API</a>':'')+
+      (d9400?'<a class="btn-link red" href="'+WORKER_URL+'/api/ban/'+ban+'" target="_blank">📄 9400 資料</a>':'')+
       '<button class="btn-del" onclick="delCard(\''+ban+'\')">✕ 移除</button>'+
     '</div>';
 
   container.prepend(card);
 
-  var invDisp=(inv2==='Y')?'使用統一發票':(inv2==='N')?'免開統一發票':'（有登記）';
+  var invDisp=(inv2==='Y')?'使用統一發票':(inv2==='N')?'免開統一發票':'（需確認）';
   store[ban]={ban:ban,name:name,badge:badgeTxt,assess:assessHTML.replace(/<[^>]+>/g,''),src:src,inv:invDisp,cls:badgeCls,time:new Date().toLocaleTimeString('zh-TW')};
   addHist(ban,name,badgeTxt,badgeCls);
   document.getElementById('expRow').style.display='flex';
