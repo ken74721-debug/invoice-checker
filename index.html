@@ -218,8 +218,8 @@ var URL_ETAX='https://www.etax.nat.gov.tw/etwmain/etw113w1/ban/query';
 var URL_INV='https://www.etax.nat.gov.tw/etwmain/etw113w3/ban/query';
 var URL_AI='https://api.anthropic.com/v1/messages';
 var MODEL='claude-sonnet-4-20250514';
-// CORS Proxy（當直接存取被瀏覽器擋住時使用）
-var PROXY='https://corsproxy.io/?url=';
+// ★ Cloudflare Worker URL
+var WORKER_URL='https://invoice-checker.ken74721.workers.dev';
 var store={};var hist=[];var busy=false;
 
 function switchTab(i){document.querySelectorAll('.tab').forEach(function(t,j){t.classList.toggle('on',i===j);});document.querySelectorAll('.tab-pane').forEach(function(p,j){p.classList.toggle('on',i===j);});}
@@ -309,50 +309,65 @@ async function runQuery(ban){
   var ckOk=chkBan(ban);
   var list=document.getElementById('resList');
   document.getElementById('resSec').style.display='block';
-
   if(!ckOk){render(ban,null,false,'ck',null,list);return;}
 
-  // Loading
   var ldiv=document.createElement('div');
   ldiv.className='loading';ldiv.id='ld_'+ban;
   ldiv.innerHTML='<div class="spin blue"></div><div>'+
     '<div style="font-size:13px;color:var(--blue)"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div>'+
-    '<div style="font-size:10.5px;color:var(--gray);margin-top:2px">Claude AI 查詢財政部稅務入口網…</div></div>';
+    '<div style="font-size:10.5px;color:var(--gray);margin-top:2px">步驟1：查詢財政部資料集9400…</div></div>';
   list.prepend(ldiv);
 
-  // 直接用 Claude AI 查（解決 CORS 問題，同時涵蓋大小商家）
-  var aiData=null,src='fail';
+  // Step 1：透過 Worker 查 9400
+  var d9400=null,src='';
   try{
-    aiData=await queryAI(ban);
-    src='ai';
-  }catch(e){
-    src='fail';
-    console.warn('[AI err]',e);
+    var ctrl=new AbortController();
+    var tid=setTimeout(function(){ctrl.abort();},10000);
+    var r=await fetch(WORKER_URL+'/api/ban/'+ban,{signal:ctrl.signal});
+    clearTimeout(tid);
+    if(r.ok){
+      var j=await r.json();
+      if(j&&!(Array.isArray(j)&&j.length===0)&&!j.error){
+        d9400=Array.isArray(j)?j[0]:j;
+        src='9400';
+        console.log('[9400]',ban,d9400);
+      }
+    }
+  }catch(e){console.warn('[9400 err]',e.message||e);}
+
+  // Step 2：無資料或缺欄位 → Claude AI 補查
+  var aiData=null;
+  var noName=d9400&&!pickName(d9400,ban);
+  if(!d9400||noName){
+    ldiv.innerHTML='<div class="spin blue"></div><div>'+
+      '<div style="font-size:13px;color:var(--blue)"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div>'+
+      '<div style="font-size:10.5px;color:var(--gray);margin-top:2px">步驟2：Claude AI 查詢財政部官網…</div></div>';
+    try{
+      aiData=await queryAI(ban);
+      if(!d9400){src='ai';}
+      else{
+        // 用 AI 補填缺失欄位
+        if(aiData.name)     d9400['businessNm']=aiData.name;
+        if(aiData.bizItems) d9400['industryNm']=aiData.bizItems;
+        if(aiData.invoiceFlag&&aiData.invoiceFlag!=='null') d9400['isUseInvoice']=aiData.invoiceFlag;
+        src='9400+AI'; aiData=null;
+      }
+    }catch(e){src=d9400?src:'fail';console.warn('[AI err]',e);}
   }
 
   ldiv.remove();
-  render(ban,null,true,src,aiData,list);
+  render(ban,d9400,true,src,aiData,list);
 }
 
 async function queryAI(ban){
   var prompt=
-    '請用 web_search 工具查詢台灣統一編號「'+ban+'」的完整稅籍資料。\n\n'+
-    '請搜尋以下關鍵字（請確實執行搜尋）：\n'+
-    '1. 「'+ban+' site:etax.nat.gov.tw」\n'+
-    '2. 「'+ban+' 統一編號 營業人名稱 財政部」\n\n'+
-    '從財政部稅務入口網 etax.nat.gov.tw 找出：\n'+
-    '- 營業人名稱（店名或公司名）\n'+
-    '- 營業狀況（營業中 / 停業 / 撤銷等）\n'+
-    '- 登記地址\n'+
-    '- 組織種類（獨資/合夥/公司）\n'+
-    '- 設立日期\n'+
-    '- 資本額\n'+
-    '- 登記營業項目\n'+
-    '- 是否使用統一發票（Y=使用，N=免開）\n\n'+
-    '【重要】只回傳以下 JSON 格式，不要任何說明文字：\n'+
+    '請用 web_search 查詢台灣統一編號「'+ban+'」的財政部稅籍公示資料。\n'+
+    '搜尋：「'+ban+' 統一編號 財政部 稅籍 營業狀況」\n'+
+    '從 etax.nat.gov.tw 取得：營業人名稱、營業狀況、地址、組織種類、設立日期、資本額、登記營業項目、是否使用統一發票。\n'+
+    '只回傳 JSON，不要其他文字：\n'+
     '{"name":"","status":"","statusOk":true,"address":"","orgType":"","setupDate":"","capital":"","invoiceFlag":"Y或N或null","bizItems":"","confidence":"high或medium或low","source":""}';
 
-  var resp=await fetch(URL_AI,{
+  var resp=await fetch(WORKER_URL+'/api/claude',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
@@ -367,9 +382,9 @@ async function queryAI(ban){
   var text='';
   (data.content||[]).forEach(function(b){if(b.type==='text')text+=b.text;});
   text=text.replace(/```json|```/g,'').trim();
-  var s=text.indexOf('{'),e=text.lastIndexOf('}');
-  if(s<0||e<0)throw new Error('No JSON');
-  return JSON.parse(text.slice(s,e+1));
+  var s=text.indexOf('{'),e2=text.lastIndexOf('}');
+  if(s<0||e2<0)throw new Error('No JSON');
+  return JSON.parse(text.slice(s,e2+1));
 }
 
 function render(ban,d,ckOk,src,ai,container){
