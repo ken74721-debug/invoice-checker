@@ -372,36 +372,54 @@ function setLoading(div, ban, blue, msg){
 
 async function queryAI(ban){
   var prompt=
-    '請用 web_search 查詢台灣統一編號「'+ban+'」的財政部稅籍公示資料。\n'+
-    '搜尋：「'+ban+' 統一編號 財政部 稅籍 營業狀況 營業人名稱」\n'+
-    '從 etax.nat.gov.tw 取得：營業人名稱、營業狀況（營業中/非營業中/停業）、地址、組織種類、設立日期、資本額、登記營業項目、是否使用統一發票。\n'+
-    '只回傳 JSON，不要其他文字：\n'+
-    '{"name":"","status":"","statusOk":true或false,"address":"","orgType":"","setupDate":"","capital":"","invoiceFlag":"Y或N或null","bizItems":"","confidence":"high或medium或low","source":""}';
+    '你是台灣會計助理。請用 web_search 工具搜尋以下統一編號的財政部稅籍公示資料。\n\n'+
+    '統一編號：'+ban+'\n\n'+
+    '請依序執行以下搜尋：\n'+
+    '1. 搜尋關鍵字：「'+ban+' 財政部稅籍 營業人名稱 營業狀況」\n'+
+    '2. 搜尋關鍵字：「'+ban+' etax.nat.gov.tw」\n'+
+    '3. 搜尋關鍵字：「'+ban+' 統一編號查詢 稅籍登記」\n\n'+
+    '請從搜尋結果中找出以下資料（財政部稅務入口網 etax.nat.gov.tw 的公示資料最準確）：\n'+
+    '- 營業人名稱\n'+
+    '- 營業狀況（可能是：營業中、非營業中、停業、撤銷、廢止等）\n'+
+    '- 營業(稅籍)登記地址\n'+
+    '- 組織種類\n'+
+    '- 設立日期\n'+
+    '- 資本額\n'+
+    '- 登記營業項目\n\n'+
+    '【非常重要】：\n'+
+    '- 無論是「營業中」或「非營業中」都必須回傳資料\n'+
+    '- statusOk：營業中=true，非營業中/停業/撤銷=false\n'+
+    '- 若完全查無此統編任何資料，name 填空字串\n\n'+
+    '只回傳以下 JSON 格式，不要任何其他文字：\n'+
+    '{"name":"","status":"","statusOk":true,"address":"","orgType":"","setupDate":"","capital":"","invoiceFlag":null,"bizItems":"","confidence":"high","source":"etax.nat.gov.tw"}';
 
-  console.log('[queryAI] calling worker:', WORKER_URL+'/api/claude');
+  console.log('[queryAI] ban='+ban+' calling '+WORKER_URL+'/api/claude');
   var resp=await fetch(WORKER_URL+'/api/claude',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
       model:MODEL,
-      max_tokens:1200,
+      max_tokens:2000,
       tools:[{type:'web_search_20250305',name:'web_search'}],
       messages:[{role:'user',content:prompt}]
     })
   });
-  console.log('[queryAI] response status:', resp.status);
+  console.log('[queryAI] status='+resp.status);
   if(!resp.ok){
     var errText=await resp.text();
-    console.error('[queryAI] error body:', errText);
-    throw new Error('HTTP '+resp.status+': '+errText.slice(0,200));
+    console.error('[queryAI] error:',errText.slice(0,300));
+    throw new Error('HTTP '+resp.status);
   }
   var data=await resp.json();
-  console.log('[queryAI] raw response:', JSON.stringify(data).slice(0,500));
+  // 收集所有 text block
   var text='';
-  (data.content||[]).forEach(function(b){if(b.type==='text')text+=b.text;});
+  (data.content||[]).forEach(function(b){
+    if(b.type==='text') text+=b.text;
+  });
+  console.log('[queryAI] text='+text.slice(0,400));
   text=text.replace(/```json|```/g,'').trim();
-  var s=text.indexOf('{'),e2=text.lastIndexOf('}');
-  if(s<0||e2<0)throw new Error('No JSON in response: '+text.slice(0,200));
+  var s=text.indexOf('{'), e2=text.lastIndexOf('}');
+  if(s<0||e2<0) throw new Error('No JSON: '+text.slice(0,200));
   return JSON.parse(text.slice(s,e2+1));
 }
 
@@ -447,23 +465,42 @@ function render(ban, d9400, etax, ckOk, src, ai, container){
 
   }else if(ai){
     srcCls='sp-ai';srcTxt='Claude AI';
-    var aok=ai.statusOk,ainv=ai.invoiceFlag,ast=ai.status||'';
-    if(!aok&&ast&&ast!=='營業中'){
+    var aok=ai.statusOk, ainv=ai.invoiceFlag, ast=ai.status||'';
+
+    if(ast===''&&!ai.name){
+      // 完全查無資料
+      badgeCls='b-unk';badgeTxt='查無資料';assessCls='unk';
+      assessHTML='⚠ 查無此統編的稅籍公示資料。<br>'+
+        '可能原因：統編有誤、尚未登記、或資料未公開。<br>'+
+        '請至財政部稅務入口網手動確認。';
+    }else if(!aok){
+      // 非營業中 / 停業 / 撤銷
       badgeCls='b-err';badgeTxt=ast||'非正常';assessCls='err';
-      assessHTML='❌ 此商家稅籍狀態為「'+esc(ast)+'」，並非正常營業中。<br>建議暫緩核銷並向財政部查核。';
+      assessHTML='❌ 此商家稅籍狀態為「<b>'+esc(ast)+'</b>」，並非正常營業中。<br>'+
+        '此發票/收據來源可能有問題，建議<b>不予核銷</b>並向財政部查核。';
     }else if(ainv==='N'){
       badgeCls='b-exempt';badgeTxt='免開統一發票';assessCls='warn';
-      assessHTML='⚠ 此商家為<b>免用統一發票</b>之小規模營業人。<br>應取得「<b>收據</b>」入帳，請依公司規定判斷是否可核銷。';
-    }else if(aok||ast==='營業中'){
-      badgeCls='b-ok';badgeTxt=(ainv==='Y')?'正常╱使用統一發票':'正常營業';assessCls='ok';
-      assessHTML='✅ 此商家稅籍狀態正常（'+esc(ast)+'）。<br>'+(ainv==='Y'?'使用統一發票，可依正常程序核銷。':ainv==='N'?'⚠ 免開統一發票，應以收據入帳。':'請至財政部官網確認是否使用統一發票，再決定核銷方式。');
+      assessHTML='⚠ 此商家為<b>免用統一發票</b>之小規模營業人。<br>'+
+        '應取得「<b>收據</b>」入帳，而非統一發票格式。<br>'+
+        '請依公司報支規定判斷是否可核銷。';
+    }else if(aok){
+      badgeCls='b-ok';
+      badgeTxt=(ainv==='Y')?'正常╱使用統一發票':'正常營業';
+      assessCls='ok';
+      assessHTML='✅ 此商家稅籍狀態正常（'+esc(ast)+'）。<br>'+
+        (ainv==='Y'?'使用統一發票，可依正常程序核銷。':
+         ainv==='N'?'⚠ 免開統一發票，應以收據入帳。':
+         '請至財政部官網確認是否使用統一發票，再決定核銷方式。');
     }else{
       badgeCls='b-unk';badgeTxt='需人工確認';assessCls='unk';
-      assessHTML='⚠ AI 解析結果信心度較低（'+esc(ai.confidence||'?')+'）。<br>請至財政部稅務入口網人工確認後再決定是否核銷。';
+      assessHTML='⚠ AI 解析結果信心度較低（'+esc(ai.confidence||'?')+'）。<br>'+
+        '請至財政部稅務入口網人工確認後再決定是否核銷。';
     }
   }else{
-    srcCls='sp-fail';srcTxt='查詢失敗';badgeCls='b-unk';badgeTxt='需人工確認';assessCls='unk';
-    assessHTML='⚠ 自動查詢失敗。請至財政部稅務入口網手動確認。';
+    srcCls='sp-fail';srcTxt='需人工確認';badgeCls='b-unk';badgeTxt='需人工確認';assessCls='unk';
+    assessHTML='⚠ 自動查詢未取得完整資料。<br>'+
+      '請點擊下方「財政部稅籍查詢」，在官網輸入統編 <b style="font-family:JetBrains Mono,monospace">'+ban+'</b> 手動確認。<br>'+
+      '若官網顯示「非營業中」，表示此商家已停業，不予核銷。';
   }
 
   // ── 取欄位值（優先 etax，其次 9400，再 AI）──
