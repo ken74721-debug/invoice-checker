@@ -355,29 +355,14 @@ async function runQuery(ban){
 }
 
 async function queryAI(ban){
-  var prompt=
-    '請用 web_search 工具搜尋台灣統一編號「'+ban+'」的財政部稅籍公示資料。\n\n'+
-    '請搜尋以下關鍵字：「'+ban+' site:etax.nat.gov.tw」\n'+
-    '或：「'+ban+' 財政部稅籍 營業狀況 營業人名稱」\n\n'+
-    '重點：此商家可能是「非營業中」或「停業」，請務必如實回報 status 欄位。\n'+
-    '若查到「非營業中」「停業」「撤銷」「廢止」等字樣，statusOk 請填 false。\n'+
-    '若查到「營業中」，statusOk 請填 true。\n\n'+
+  var prompt='請用 web_search 搜尋台灣統一編號「'+ban+'」的財政部稅籍公示資料。\n'+
+    '搜尋：'+ban+' 財政部 稅籍 營業人名稱 負責人\n'+
+    '從 etax.nat.gov.tw 找出：營業人名稱、負責人、營業狀況、地址、組織種類、設立日期、登記營業項目、是否使用統一發票。\n'+
     '只回傳 JSON，不要其他文字：\n'+
-    '{"name":"營業人名稱","status":"營業中或非營業中或停業等","statusOk":true或false,'+
-    '"address":"地址","orgType":"組織種類","setupDate":"設立日期",'+
-    '"invoiceFlag":"Y或N或null","capital":"資本額","bizItems":"登記營業項目",'+
-    '"confidence":"high或medium或low","source":"資料來源網址"}';
-
-  var resp=await fetch(URL_AI,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:MODEL,
-      max_tokens:1500,
-      tools:[{type:'web_search_20250305',name:'web_search'}],
-      messages:[{role:'user',content:prompt}]
-    })
-  });
+    '{"name":"","status":"","statusOk":true,"principal":"","address":"","orgType":"","setupDate":"","invoiceFlag":"Y或N","capital":"","bizItems":"","confidence":"high或medium或low","source":""}';
+  var resp=await fetch(URL_AI,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:MODEL,max_tokens:1200,tools:[{type:'web_search_20250305',name:'web_search'}],
+    messages:[{role:'user',content:prompt}]})});
   if(!resp.ok)throw new Error('HTTP '+resp.status);
   var data=await resp.json();
   var text='';
@@ -411,10 +396,8 @@ function render(ban,d,ckOk,src,ai,container){
     srcCls='sp-ai';srcTxt='Claude AI';
     var aok=ai.statusOk,ainv=ai.invoiceFlag,ast=ai.status||'';
     if(!aok&&ast&&ast!=='營業中'){
-      // 非營業中：顯示紅色警告，但仍顯示商家資訊
       badgeCls='b-err';badgeTxt=ast||'非正常';assessCls='err';
-      assessHTML='❌ 此商家稅籍狀態為「<b>'+esc(ast)+'</b>」，並非正常營業中。<br>'+
-        '此發票/收據來源有問題，<b>建議暫緩核銷</b>並向財政部查核。';
+      assessHTML='❌ 此商家稅籍狀態為「'+esc(ast)+'」，並非正常營業中。<br>建議暫緩核銷並向財政部查核。';
     }else if(ainv==='N'){
       badgeCls='b-exempt';badgeTxt='免開統一發票';assessCls='warn';
       assessHTML='⚠ 此商家為<b>免用統一發票</b>之小規模營業人。<br>應取得「<b>收據</b>」入帳，請依公司規定判斷是否可核銷。';
@@ -426,10 +409,8 @@ function render(ban,d,ckOk,src,ai,container){
       assessHTML='⚠ AI 解析結果信心度較低（'+esc(ai.confidence||'?')+'）。<br>請至財政部稅務入口網人工確認後再決定是否核銷。';
     }
   }else{
-    srcCls='sp-fail';srcTxt='需人工確認';badgeCls='b-unk';badgeTxt='需人工確認';assessCls='unk';
-    assessHTML='⚠ 自動查詢失敗（AI 無法取得資料）。<br>'+
-      '此統編可能為<b>非營業中、已撤銷或停業</b>的商家，9400 資料集不收錄。<br>'+
-      '請點擊下方「財政部稅籍查詢」，在官網輸入統編 <b>'+esc(ban)+'</b> 確認。';
+    srcCls='sp-fail';srcTxt='查詢失敗';badgeCls='b-unk';badgeTxt='需人工確認';assessCls='unk';
+    assessHTML='⚠ 自動查詢失敗。請至財政部稅務入口網手動確認。';
   }
 
   var name,inv2,invTxt,invCls,prin,setup,addr,capital,biz;
