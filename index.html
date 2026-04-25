@@ -320,9 +320,12 @@ async function runQuery(ban){
   // Step 1：9400
   var d9400=null,src='';
   try{
-    var r=await fetch(URL_9400+ban,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(10000)});
+    var ctrl=new AbortController();
+    var tid=setTimeout(function(){ctrl.abort();},10000);
+    var r=await fetch(URL_9400+ban,{headers:{Accept:'application/json'},signal:ctrl.signal});
+    clearTimeout(tid);
     if(r.ok){var j=await r.json();if(j&&!(Array.isArray(j)&&j.length===0)){d9400=Array.isArray(j)?j[0]:j;src='9400';console.log('[9400]',ban,d9400);}}
-  }catch(e){console.warn('[9400 err]',e);}
+  }catch(e){console.warn('[9400 err]',e.message||e);}
 
   // Step 2：無資料 → AI 完整查
   var aiData=null;
