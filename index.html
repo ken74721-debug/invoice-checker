@@ -311,13 +311,29 @@ async function runQuery(ban) {
     } catch(e) { console.warn('[twincn]',e.message); }
   }
 
-  // Step 3：Claude AI（最後手段，可查財政部官網含行號）
-  if (!result) {
-    updLoad(ldiv, true, '步驟3：Claude AI 搜尋財政部資料…');
+  // Step 3：若有結果但名稱空白，或前兩步都查無 → Claude AI
+  if (!result || !result.name) {
+    updLoad(ldiv, true, '步驟'+(result?'3':'3')+'：Claude AI 搜尋財政部資料…');
     try {
       var aiData = await queryAI(ban);
-      if (aiData && (aiData.name || aiData.status)) { result=aiData; src='ai'; }
-    } catch(e) { console.warn('[AI]',e.message); src='fail'; }
+      if (aiData && (aiData.name || aiData.status)) {
+        if (result) {
+          // 有基本結果，只補名稱和缺失欄位
+          if (aiData.name)        result.name       = aiData.name;
+          if (aiData.address)     result.address    = aiData.address;
+          if (aiData.setupDate)   result.setupDate  = aiData.setupDate;
+          if (aiData.capital)     result.capital    = aiData.capital;
+          if (aiData.bizItems)    result.bizItems   = aiData.bizItems;
+          if (aiData.invoiceFlag) result.invoiceFlag= aiData.invoiceFlag;
+          if (aiData.orgType)     result.orgType    = aiData.orgType;
+          if (!result.source)     result.source     = aiData.source;
+          src = src+'+AI';
+        } else {
+          result = aiData;
+          src = 'ai';
+        }
+      }
+    } catch(e) { console.warn('[AI]',e.message); if (!result) src='fail'; }
   }
 
   ldiv.remove();
