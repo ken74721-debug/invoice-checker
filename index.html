@@ -309,7 +309,7 @@ async function runQuery(ban){
   var ckOk=chkBan(ban);
   var list=document.getElementById('resList');
   document.getElementById('resSec').style.display='block';
-  if(!ckOk){render(ban,null,false,'ck',null,list);return;}
+  if(!ckOk){render(ban,null,null,false,'ck',null,list);return;}
 
   var ldiv=document.createElement('div');
   ldiv.className='loading';ldiv.id='ld_'+ban;
