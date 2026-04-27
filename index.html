@@ -420,59 +420,59 @@ function setLoading(div, ban, blue, msg){
 }
 
 async function queryAI(ban){
-  var prompt=
-    '你是台灣會計助理，請幫我查詢統一編號「'+ban+'」的財政部稅籍資料。\n\n'+
-    '請使用 web_search 工具，搜尋以下內容（請確實執行搜尋）：\n\n'+
+  var prompt =
+    '你是台灣會計助理。請用 web_search 工具查詢統一編號「'+ban+'」的公司資料。\n\n'+
+    '請依序執行以下搜尋，直到找到資料為止：\n\n'+
     '搜尋1：「'+ban+'」\n'+
-    '搜尋2：「統編'+ban+' 營業人名稱 營業狀況 財政部」\n'+
-    '搜尋3：「'+ban+' site:etax.nat.gov.tw OR site:twincn.com OR site:工商登記.tw OR site:findbiz.ntpc.gov.tw」\n\n'+
-    '財政部稅務入口網的查詢結果網址格式為：\n'+
-    'https://www.etax.nat.gov.tw/etwmain/etw113w1/ban/result\n\n'+
-    '其他可能有此資料的網站：twincn.com、工商查詢網站等。\n\n'+
-    '請從搜尋結果中找出統編「'+ban+'」的以下資料：\n'+
-    '- 營業人名稱（店名或公司名）\n'+
-    '- 營業狀況（營業中 or 非營業中 or 停業 or 撤銷 or 廢止）\n'+
+    '搜尋2：「'+ban+' 公司名稱 營業狀況」\n'+
+    '搜尋3：「'+ban+' 有限公司 OR 股份有限公司 OR 商號」\n\n'+
+    '資料來源優先順序：\n'+
+    '1. etax.nat.gov.tw（財政部稅務入口網）\n'+
+    '2. findbiz.nat.gov.tw（經濟部商工登記）\n'+
+    '3. 其他商業登記查詢網站\n\n'+
+    '請從搜尋結果中擷取：\n'+
+    '- 公司/商號名稱\n'+
+    '- 營業狀況（營業中/非營業中/核准設立/停業/撤銷/廢止）\n'+
     '- 登記地址\n'+
     '- 組織種類\n'+
     '- 設立日期\n'+
     '- 資本額\n'+
     '- 登記營業項目\n\n'+
-    '【重要規則】\n'+
-    '1. 無論營業中或非營業中都必須回傳\n'+
-    '2. statusOk：營業中=true，其他=false\n'+
-    '3. 若真的查無任何資料，name 和 status 都填空字串\n'+
-    '4. 只回傳 JSON，不要其他文字\n\n'+
+    '【重要】：\n'+
+    '- 無論營業中或非營業中都要回傳\n'+
+    '- statusOk：營業中或核准設立=true，其他=false\n'+
+    '- 若查無任何資料，name填空字串\n\n'+
+    '只回傳 JSON，不要其他文字：\n'+
     '{"name":"","status":"","statusOk":false,"address":"","orgType":"","setupDate":"","capital":"","invoiceFlag":null,"bizItems":"","confidence":"high","source":""}';
 
   console.log('[AI] querying ban='+ban);
-  var resp=await fetch(WORKER_URL+'/api/claude',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:MODEL,
-      max_tokens:3000,
-      tools:[{type:'web_search_20250305',name:'web_search'}],
-      messages:[{role:'user',content:prompt}]
+  var resp = await fetch(WORKER_URL+'/api/claude', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: 4000,
+      tools: [{type:'web_search_20250305', name:'web_search'}],
+      messages: [{role:'user', content:prompt}]
     })
   });
   if(!resp.ok){
-    var t=await resp.text();
-    console.error('[AI] error',resp.status,t.slice(0,200));
+    var t = await resp.text();
+    console.error('[AI] error', resp.status, t.slice(0,200));
     throw new Error('HTTP '+resp.status);
   }
-  var data=await resp.json();
-  var text='';
-  (data.content||[]).forEach(function(b){
-    if(b.type==='text')text+=b.text;
-  });
-  console.log('[AI] result text:',text.slice(0,600));
-  text=text.replace(/```json|```/g,'').trim();
-  var s=text.indexOf('{'),e2=text.lastIndexOf('}');
-  if(s<0||e2<0)throw new Error('No JSON: '+text.slice(0,300));
-  var result=JSON.parse(text.slice(s,e2+1));
-  console.log('[AI] parsed:',result);
+  var data = await resp.json();
+  var text = '';
+  (data.content||[]).forEach(function(b){ if(b.type==='text') text+=b.text; });
+  console.log('[AI] result:', text.slice(0,500));
+  text = text.replace(/```json|```/g,'').trim();
+  var s = text.indexOf('{'), e2 = text.lastIndexOf('}');
+  if(s<0||e2<0) throw new Error('No JSON: '+text.slice(0,200));
+  var result = JSON.parse(text.slice(s,e2+1));
+  console.log('[AI] parsed:', result);
   return result;
 }
+
 
 function render(ban, d9400, etax, ckOk, src, ai, container){
   var d = etax || null; // 優先用 etax 資料
