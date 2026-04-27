@@ -23,7 +23,8 @@ header{background:var(--ink);position:relative;overflow:hidden;}
 .info-inner{max-width:960px;margin:0 auto;padding:9px 24px;display:flex;gap:20px;flex-wrap:wrap;}
 .ii{display:flex;align-items:center;gap:7px;font-size:11px;}
 .in{width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0;}
-.n1{background:var(--green);}.n2{background:var(--accent);}.n3{background:var(--blue);}
+.n1{background:var(--gold);}.n2{background:var(--green);}.n3{background:var(--accent);}
+.n4{background:var(--blue);}.n5{background:var(--gray);}
 .ii span{color:#5c4400;}
 main{max-width:960px;margin:0 auto;padding:22px 20px 48px;}
 .tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:18px;}
@@ -73,11 +74,14 @@ main{max-width:960px;margin:0 auto;padding:22px 20px 48px;}
 .b-err   {background:rgba(122,0,0,.08);  color:var(--red);  border:1px solid rgba(122,0,0,.20);}
 .b-unk   {background:rgba(0,0,0,.05);    color:var(--gray); border:1px solid rgba(0,0,0,.12);}
 .src-pill{font-size:9.5px;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:auto;flex-shrink:0;}
-.sp-9400{background:rgba(26,82,40,.07);color:var(--green);border:1px solid rgba(26,82,40,.18);}
-.sp-mix {background:rgba(26,82,40,.07);color:var(--green);border:1px solid rgba(26,82,40,.18);}
-.sp-ai  {background:rgba(15,53,112,.07);color:var(--blue); border:1px solid rgba(15,53,112,.18);}
-.sp-ck  {background:rgba(122,0,0,.06); color:var(--red);   border:1px solid rgba(122,0,0,.15);}
-.sp-fail{background:rgba(0,0,0,.04);   color:var(--gray);  border:1px solid rgba(0,0,0,.1);}
+.sp-gcis {background:rgba(138,104,0,.08);color:var(--gold); border:1px solid rgba(138,104,0,.22);}
+.sp-9400 {background:rgba(26,82,40,.07); color:var(--green);border:1px solid rgba(26,82,40,.18);}
+.sp-mix  {background:rgba(26,82,40,.07); color:var(--green);border:1px solid rgba(26,82,40,.18);}
+.sp-all  {background:rgba(15,53,112,.07);color:var(--blue); border:1px solid rgba(15,53,112,.18);}
+.sp-etax {background:rgba(120,0,120,.07);color:#7a007a;    border:1px solid rgba(120,0,120,.2);}
+.sp-ai   {background:rgba(15,53,112,.07);color:var(--blue); border:1px solid rgba(15,53,112,.18);}
+.sp-ck   {background:rgba(122,0,0,.06);  color:var(--red);  border:1px solid rgba(122,0,0,.15);}
+.sp-fail {background:rgba(0,0,0,.04);    color:var(--gray); border:1px solid rgba(0,0,0,.1);}
 .co-blk{flex:1;min-width:0;}
 .co-name{font-family:'Noto Serif TC',serif;font-size:16px;font-weight:700;color:var(--ink);}
 .co-ban{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray);margin-top:2px;}
@@ -137,15 +141,17 @@ details.raw[open] summary::before{content:'▼ ';}
 <header>
   <div class="hdr">
     <div class="seal">查</div>
-    <div><h1>發票統編查驗系統</h1><p>財政部資料集9400 ＋ Claude AI 智慧補查 ／ 雙引擎查驗</p></div>
+    <div><h1>發票統編查驗系統</h1><p>商工GCIS ＋ 財政部9400 ＋ twincn ＋ Claude AI ／ 五引擎查驗</p></div>
   </div>
   <div class="hdr-bg">稅籍</div>
 </header>
 <div class="info-bar">
   <div class="info-inner">
-    <div class="ii"><div class="in n1">1</div><span><b>資料集9400</b>：財政部開放稅籍 API（僅含營業中）</span></div>
-    <div class="ii"><div class="in n2">2</div><span><b>Claude AI</b>：缺資料時自動補查財政部官網</span></div>
-    <div class="ii"><div class="in n3">3</div><span><b>完整建議</b>：免開發票、核銷判斷</span></div>
+    <div class="ii"><div class="in n1">1</div><span><b>經濟部商工</b>：含新設公司、非營業</span></div>
+    <div class="ii"><div class="in n2">2</div><span><b>財政部9400</b>：開放稅籍（含免開發票）</span></div>
+    <div class="ii"><div class="in n3">3</div><span><b>財政部稅務網</b>：etax.nat.gov.tw</span></div>
+    <div class="ii"><div class="in n4">4</div><span><b>twincn</b>：補充稅籍資料</span></div>
+    <div class="ii"><div class="in n5">5</div><span><b>Claude AI</b>：最終補查手段</span></div>
   </div>
 </div>
 <main>
@@ -168,8 +174,8 @@ details.raw[open] summary::before{content:'▼ ';}
         </div>
         <div class="smps">
           <span class="smps-lbl">範例：</span>
-          <button class="smp" onclick="fill('04595297')">04595297 統一超商</button>
-          <button class="smp" onclick="fill('23622647')">23622647 全家便利</button>
+          <button class="smp" onclick="fill('22555003')">22555003 統一超商</button>
+          <button class="smp" onclick="fill('23060248')">23060248 全家便利</button>
           <button class="smp" onclick="fill('87018196')">87018196 獨資行號</button>
           <button class="smp" onclick="fill('76611635')">76611635 來來鎖匙</button>
           <button class="smp" onclick="fill('12345678')">12345678 無效格式</button>
@@ -206,27 +212,55 @@ details.raw[open] summary::before{content:'▼ ';}
     <div id="histBody"><div class="empty"><div class="empty-ico">🗂</div>尚無查詢記錄</div></div>
   </div>
   <div style="margin-top:22px;font-size:10.5px;color:var(--gray);text-align:center;line-height:2">
-    ① <a href="https://eip.fia.gov.tw/OAI/swagger-ui.html" target="_blank" style="color:var(--accent)">財政部資料集9400 API</a>
-    ② <a href="https://www.etax.nat.gov.tw/etwmain/etw113w1/ban/query" target="_blank" style="color:var(--accent)">財政部稅務入口網</a>
-    ③ <a href="https://www.etax.nat.gov.tw/etwmain/etw113w3/ban/query" target="_blank" style="color:var(--accent)">免開發票查詢</a>
+    ① <a href="https://data.gcis.nat.gov.tw" target="_blank" style="color:var(--accent)">經濟部商工 GCIS 開放資料</a>
+    ② <a href="https://eip.fia.gov.tw/OAI/swagger-ui.html" target="_blank" style="color:var(--accent)">財政部資料集9400 API</a>
+    ③ <a href="https://www.etax.nat.gov.tw/etwmain/etw113w1/ban/query" target="_blank" style="color:var(--accent)">財政部稅務入口網</a>
+    ④ <a href="https://www.etax.nat.gov.tw/etwmain/etw113w3/ban/query" target="_blank" style="color:var(--accent)">免開發票查詢</a>
+    ⑤ <a href="https://www.twincn.com" target="_blank" style="color:var(--accent)">twincn.com</a>
   </div>
 </main>
 <script>
 'use strict';
-var URL_9400='https://eip.fia.gov.tw/OAI/api/businessRegistration/';
-var URL_ETAX='https://www.etax.nat.gov.tw/etwmain/etw113w1/ban/query';
-var URL_INV='https://www.etax.nat.gov.tw/etwmain/etw113w3/ban/query';
-var URL_AI='https://api.anthropic.com/v1/messages';
-var MODEL='claude-sonnet-4-20250514';
-var store={};var hist=[];var busy=false;
 
+// ── 設定區（根據您的部署環境修改）────────────────────────────────────
+// URL_WORKER：Cloudflare Worker URL（啟用 findbiz / twincn / AI 代理）
+var URL_WORKER = '';  // 例：'https://your-worker.your-subdomain.workers.dev'
+// CLAUDE_KEY：不設 Worker 時可直接填入 Anthropic API Key 啟用 Claude AI 補查
+// 注意：直接填入 Key 會暴露在前端原始碼，僅建議本機測試使用
+var CLAUDE_KEY = '';  // 例：'sk-ant-...'
+var URL_9400   = 'https://eip.fia.gov.tw/OAI/api/businessRegistration/';
+var URL_ETAX   = 'https://www.etax.nat.gov.tw/etwmain/etw113w1/ban/query';
+var URL_INV    = 'https://www.etax.nat.gov.tw/etwmain/etw113w3/ban/query';
+var MODEL      = 'claude-haiku-4-5-20251001';
+
+// GCIS 開放資料（data.gcis.nat.gov.tw，支援直接跨域呼叫）
+var GCIS_COMP  = 'https://data.gcis.nat.gov.tw/od/data/api/6BBA2268-1367-4B42-9CCA-BC17499EBE8C';
+var GCIS_BIZ   = 'https://data.gcis.nat.gov.tw/od/data/api/9D17AE0D-37FD-4D41-8592-0D03BDF0F32C';
+var GCIS_LP    = 'https://data.gcis.nat.gov.tw/od/data/api/236EE382-4942-41A9-BD03-CA0709025E7C';
+
+var store = {}; var hist = []; var busy = false;
+
+// ── UI 工具 ─────────────────────────────────────────────────────────
 function switchTab(i){document.querySelectorAll('.tab').forEach(function(t,j){t.classList.toggle('on',i===j);});document.querySelectorAll('.tab-pane').forEach(function(p,j){p.classList.toggle('on',i===j);});}
 function onInput(el){el.value=el.value.replace(/\D/g,'').slice(0,8);document.getElementById('ctr').textContent=el.value.length+' / 8';}
 function fill(b){var el=document.getElementById('banIn');el.value=b;document.getElementById('ctr').textContent=b.length+' / 8';el.focus();}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
 
-// 統編驗算：總和 %10 = 0 或 7
+function mkLoading(ban, msg){
+  var d=document.createElement('div');
+  d.className='loading';d.id='ld_'+ban;
+  d.innerHTML='<div class="spin" id="sp_'+ban+'"></div><div><div style="font-size:13px;color:var(--gray)"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div><div id="lm_'+ban+'" style="font-size:10.5px;color:var(--gray);margin-top:2px">'+msg+'</div></div>';
+  return d;
+}
+function setLoading(ban, msg, blue){
+  var sp=document.getElementById('sp_'+ban);
+  var lm=document.getElementById('lm_'+ban);
+  if(sp)sp.className='spin'+(blue?' blue':'');
+  if(lm)lm.textContent=msg;
+}
+
+// ── 統編驗算：總和 %10 = 0 或 7 ────────────────────────────────────
 function chkBan(ban){
   if(!/^\d{8}$/.test(ban))return false;
   var w=[1,2,1,2,1,2,4,1],t=0;
@@ -234,7 +268,7 @@ function chkBan(ban){
   return t%10===0||t%10===7;
 }
 
-// 從物件取值（精確比對 + key 包含比對）
+// ── 欄位提取工具 ────────────────────────────────────────────────────
 function pick(obj,keys){
   if(!obj)return '';
   var ok=Object.keys(obj);
@@ -242,36 +276,250 @@ function pick(obj,keys){
   for(var i=0;i<keys.length;i++){for(var j=0;j<ok.length;j++){if(ok[j].indexOf(keys[i])!==-1){var v=obj[ok[j]];if(v!==undefined&&v!==null&&String(v).trim())return String(v).trim();}}}
   return '';
 }
-
-// 找營業人名稱
 function pickName(obj,ban){
   if(!obj)return '';
   var ok=Object.keys(obj);
-  // 實際 key 為 businessNm（從原始欄位確認）
   var ex=['businessNm','营业人名称','營業人名稱','商號名稱','公司名稱','業者名稱','單位名稱','BusinessName','CompanyName','Name','name'];
   for(var i=0;i<ex.length;i++){var v=obj[ex[i]];if(v&&String(v).trim()&&String(v).trim()!==ban)return String(v).trim();}
   for(var i=0;i<ok.length;i++){var k=ok[i];if(k.indexOf('名稱')!==-1&&k.indexOf('行業')===-1&&k.indexOf('組織')===-1&&k.indexOf('代號')===-1&&k.indexOf('總機構')===-1){var v=obj[k];if(v&&String(v).trim()&&String(v).trim()!==ban)return String(v).trim();}}
   return '';
 }
-
-// 找登記營業項目
 function pickBiz(obj){
   if(!obj)return '';
   var ok=Object.keys(obj);
-  // 實際 key 為 industryNm（從原始欄位確認）
   var ex2=['industryNm','登記營業項目','營業項目','bizItems','BusinessItems'];
   for(var i=0;i<ex2.length;i++){var v=String(obj[ex2[i]]||'').trim();if(v)return v;}
-  // 找多個行業名稱：industryNm, industryNm1, industryNm2...
   var arr=[];
   for(var i=0;i<ok.length;i++){var k=ok[i];var v=String(obj[k]||'').trim();if(!v)continue;
     if(k==='industryNm'||/^industryNm\d*$/.test(k)||k==='名稱'||/^名稱\d+$/.test(k)){if(arr.indexOf(v)===-1)arr.push(v);}
   }
   return arr.join('、');
 }
+function fmtD(s){if(!s)return '—';s=String(s).replace(/\D/g,'');if(s.length===7)return '民國 '+parseInt(s.slice(0,3))+' 年 '+s.slice(3,5)+' 月 '+s.slice(5,7)+' 日';if(s.length===8)return s.slice(0,4)+'年'+s.slice(4,6)+'月'+s.slice(6,8)+'日';return s||'—';}
 
-// 日期格式化
-function fmtD(s){if(!s)return '—';s=String(s).replace(/\D/g,'');if(s.length===7)return '民國 '+parseInt(s.slice(0,3))+' 年 '+s.slice(3,5)+' 月 '+s.slice(5,7)+' 日';return s||'—';}
+// ── Source pill ──────────────────────────────────────────────────────
+function getSrcDisplay(src){
+  if(src==='ck')  return{cls:'sp-ck',  txt:'驗算失敗'};
+  if(src==='fail')return{cls:'sp-fail',txt:'查詢失敗'};
+  if(src==='ai')  return{cls:'sp-ai',  txt:'Claude AI'};
+  var parts=[];
+  if(src.indexOf('GCIS')!==-1||src.indexOf('findbiz')!==-1) parts.push('商工');
+  if(src.indexOf('9400')!==-1)   parts.push('9400');
+  if(src.indexOf('etax')!==-1)   parts.push('稅務網');
+  if(src.indexOf('twincn')!==-1) parts.push('twincn');
+  if(src.indexOf('AI')!==-1)     parts.push('AI');
+  var cls=parts.length>=3?'sp-all':parts.length===2?'sp-mix':
+          src.indexOf('etax')!==-1?'sp-etax':
+          (src.indexOf('GCIS')!==-1||src.indexOf('findbiz')!==-1)?'sp-gcis':'sp-9400';
+  return{cls:cls,txt:parts.join('+')};
+}
 
+// ── 步驟1a：GCIS 經濟部商工 ─────────────────────────────────────────
+async function queryGCIS(ban){
+  // 優先走 Worker（避免 CORS 問題）；若未設定 Worker 則直接呼叫
+  if(URL_WORKER){
+    try{
+      var r=await fetch(URL_WORKER+'/api/gcis/'+ban,{signal:AbortSignal.timeout(10000)});
+      if(r.ok){var d=await r.json();if(d&&d.found)return d;}
+    }catch(e){console.warn('[GCIS worker err]',e);}
+  }
+  // Fallback：直接呼叫 data.gcis.nat.gov.tw
+  var filter='?$format=json&$filter='+encodeURIComponent('Business_Accounting_NO eq '+ban)+'&$skip=0&$top=1';
+  var apis=[[GCIS_COMP,'公司'],[GCIS_BIZ,'行號'],[GCIS_LP,'有限合夥']];
+  for(var i=0;i<apis.length;i++){
+    try{
+      var r=await fetch(apis[i][0]+filter,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(8000)});
+      if(!r.ok)continue;
+      var j=await r.json();
+      if(!Array.isArray(j)||!j.length)continue;
+      var raw=j[0];
+      var orgType=apis[i][1];
+      var name=raw.Company_Name||raw.Business_Name||raw.Partnership_Name||'';
+      var statusCode=raw.Company_Status||raw.Business_Status||raw.Partnership_Status||'';
+      var statusDesc=raw.Company_Status_Desc||raw.Business_Status_Desc||raw.Partnership_Status_Desc||'';
+      var isActive=statusCode==='01'||statusDesc.indexOf('核准設立')!==-1||statusDesc.indexOf('設立登記')!==-1;
+      return{
+        found:true,ban,orgType,name,
+        status:statusDesc||(isActive?'核准設立':'非正常'),
+        statusOk:isActive,
+        responsible:raw.Responsible_Name||raw.Representative_Name||'',
+        setupDate:raw.Company_Setup_Date||raw.Business_Setup_Date||raw.Partnership_Setup_Date||'',
+        capital:String(raw.Capital_Amount||raw.Paid_In_Capital_Amount||''),
+        address:raw.Company_Location||raw.Business_Address||raw.Company_Address||'',
+        bizItems:raw.Business_Item_Desc||'',
+        source:'data.gcis.nat.gov.tw',
+      };
+    }catch(e){console.warn('[GCIS direct '+apis[i][1]+']',e);}
+  }
+  return null;
+}
+
+// ── 步驟1b：findbiz.nat.gov.tw（GCIS 備援，含工廠/機關/有限合夥）──
+async function queryFindbiz(ban){
+  if(!URL_WORKER)return null;
+  try{
+    var r=await fetch(URL_WORKER+'/api/findbiz/'+ban,{signal:AbortSignal.timeout(12000)});
+    if(!r.ok)return null;
+    var d=await r.json();
+    return(d&&d.found)?d:null;
+  }catch(e){console.warn('[findbiz err]',e);return null;}
+}
+
+// ── 步驟1c：財政部9400 ───────────────────────────────────────────────
+async function query9400(ban){
+  try{
+    var r=await fetch(URL_9400+ban,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(10000)});
+    if(!r.ok)return null;
+    var j=await r.json();
+    if(!j||(Array.isArray(j)&&j.length===0))return null;
+    var d=Array.isArray(j)?j[0]:j;
+    console.log('[9400]',ban,d);
+    return d;
+  }catch(e){console.warn('[9400 err]',e);return null;}
+}
+
+// ── 步驟2：財政部稅務網（etax，需 Worker）──────────────────────────
+// 涵蓋非營業中、撤銷、停業等 9400 不收錄的稅籍，含免開發票旗標
+async function queryEtax(ban){
+  if(!URL_WORKER)return null;
+  try{
+    var r=await fetch(URL_WORKER+'/api/etax/'+ban,{signal:AbortSignal.timeout(15000)});
+    if(!r.ok)return null;
+    var d=await r.json();
+    return(d&&d.found)?d:null;
+  }catch(e){console.warn('[etax err]',e);return null;}
+}
+
+// ── 步驟3：twincn（補充，需 Worker）────────────────────────────────
+async function queryTwincn(ban){
+  if(!URL_WORKER)return null;
+  try{
+    var r=await fetch(URL_WORKER+'/api/twincn/'+ban,{signal:AbortSignal.timeout(10000)});
+    if(!r.ok)return null;
+    var d=await r.json();
+    return(d&&d.found)?d:null;
+  }catch(e){console.warn('[twincn err]',e);return null;}
+}
+
+// ── 步驟3：Claude AI（最後手段，需 Worker）─────────────────────────
+async function queryAI(ban){
+  var canAI=URL_WORKER||CLAUDE_KEY;
+  if(!canAI)return null;
+  var prompt=
+    '請用 web_search 工具搜尋台灣統一編號「'+ban+'」的完整稅籍資料。\n\n'+
+    '請依序搜尋：\n'+
+    '1. 「'+ban+' site:etax.nat.gov.tw」（財政部稅務入口網）\n'+
+    '2. 「'+ban+' 財政部稅籍 免開統一發票 營業狀況」\n'+
+    '3. 「'+ban+' site:gcis.nat.gov.tw」（商工登記）\n\n'+
+    '重點：\n'+
+    '- 此商家可能是「非營業中」「停業」「撤銷」等，請如實回報 status 與 statusOk\n'+
+    '- 若為小規模營業人或免開統一發票，invoiceFlag 填 N\n'+
+    '- 若使用統一發票，invoiceFlag 填 Y\n\n'+
+    '只回傳 JSON，不要其他文字：\n'+
+    '{"name":"營業人名稱","status":"狀態說明","statusOk":true或false,'+
+    '"address":"地址","orgType":"組織種類","setupDate":"設立日期",'+
+    '"invoiceFlag":"Y或N或null","capital":"資本額","principal":"負責人",'+
+    '"bizItems":"登記營業項目","confidence":"high或medium或low","source":"資料來源"}';
+
+  var aiBody=JSON.stringify({
+    model:MODEL,max_tokens:1500,
+    tools:[{type:'web_search_20250305',name:'web_search'}],
+    messages:[{role:'user',content:prompt}]
+  });
+  try{
+    var aiEndpoint,aiHeaders;
+    if(URL_WORKER){
+      aiEndpoint=URL_WORKER+'/api/claude';
+      aiHeaders={'Content-Type':'application/json'};
+    }else{
+      // 直接呼叫（需設定 CLAUDE_KEY；僅建議本機測試用）
+      aiEndpoint='https://api.anthropic.com/v1/messages';
+      aiHeaders={
+        'Content-Type':'application/json',
+        'x-api-key':CLAUDE_KEY,
+        'anthropic-version':'2023-06-01',
+        'anthropic-beta':'web-search-2025-03-05'
+      };
+    }
+    var resp=await fetch(aiEndpoint,{method:'POST',headers:aiHeaders,body:aiBody});
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    var data=await resp.json();
+    var text='';
+    (data.content||[]).forEach(function(b){if(b.type==='text')text+=b.text;});
+    text=text.replace(/```json|```/g,'').trim();
+    var s=text.indexOf('{'),e=text.lastIndexOf('}');
+    if(s<0||e<0)throw new Error('No JSON in response');
+    return JSON.parse(text.slice(s,e+1));
+  }catch(e){console.warn('[AI err]',e);return null;}
+}
+
+// ── 資料合併：GCIS + 9400 → 標準化物件 ─────────────────────────────
+function mergeData(gcis, d9400){
+  if(!gcis&&!d9400)return null;
+  var m={};
+
+  // 名稱：GCIS 優先（含非營業中）
+  m.businessNm=
+    (gcis&&gcis.name)     ||
+    (d9400&&pickName(d9400,''))  ||
+    '';
+
+  // 統一發票旗標：來自9400（最可靠）
+  m.isUseInvoice=d9400?pick(d9400,['isUseInvoice','InvoiceFlag','invoiceFlag']):'';
+
+  // 負責人
+  m.responsible=
+    (gcis&&gcis.responsible) ||
+    (d9400&&pick(d9400,['responsible','responsibleName','負責人姓名','負責人'])) ||
+    '';
+
+  // 設立日期
+  m.businessSetupDate=
+    (gcis&&gcis.setupDate) ||
+    (d9400&&pick(d9400,['businessSetupDate','setupDate','設立日期'])) ||
+    '';
+
+  // 資本額
+  m.capitalAmount=
+    (gcis&&gcis.capital) ||
+    (d9400&&pick(d9400,['capitalAmount','capital','資本額'])) ||
+    '';
+
+  // 地址
+  m.businessAddress=
+    (gcis&&gcis.address) ||
+    (d9400&&pick(d9400,['businessAddress','address','營業地址','地址'])) ||
+    '';
+
+  // 登記營業項目
+  m.industryNm=
+    (gcis&&gcis.bizItems) ||
+    (d9400&&pickBiz(d9400)) ||
+    '';
+
+  // 狀態（GCIS 最準確，包含非營業中）
+  m._statusOk= gcis?gcis.statusOk:true;      // true=正常；false=非正常；null=未知
+  m._status  = (gcis&&gcis.status)||(d9400?'營業中':'');
+  m._orgType = (gcis&&gcis.orgType)||'';
+
+  return m;
+}
+
+// ── AI 補強 merged 物件 ──────────────────────────────────────────────
+function applyAI(m, ai){
+  if(!ai||!m)return;
+  if(ai.name&&!m.businessNm)           m.businessNm=ai.name;
+  if(ai.principal&&!m.responsible)     m.responsible=ai.principal;
+  if(ai.invoiceFlag&&ai.invoiceFlag!=='null'&&!m.isUseInvoice) m.isUseInvoice=ai.invoiceFlag;
+  if(ai.bizItems&&!m.industryNm)       m.industryNm=ai.bizItems;
+  if(ai.address&&!m.businessAddress)   m.businessAddress=ai.address;
+  if(ai.setupDate&&!m.businessSetupDate) m.businessSetupDate=ai.setupDate;
+  if(ai.capital&&!m.capitalAmount)     m.capitalAmount=ai.capital;
+  // 若 AI 說非營業，覆蓋狀態
+  if(ai.statusOk===false){m._statusOk=false;m._status=ai.status||m._status;}
+}
+
+// ── 主查詢流程 ───────────────────────────────────────────────────────
 async function doQuery(){
   var ban=document.getElementById('banIn').value.trim();
   if(ban.length!==8){alert('請輸入完整的 8 碼統一編號');return;}
@@ -308,171 +556,219 @@ async function runQuery(ban){
   var list=document.getElementById('resList');
   document.getElementById('resSec').style.display='block';
 
-  // 格式錯誤直接渲染
-  if(!ckOk){render(ban,null,false,'ck',null,list);return;}
+  // 不因檢查碼失敗直接擋查（政府機關、學校等特殊統編常不符商業驗算）
+  // 改為：先查 API，找到資料才顯示；完全查無才顯示格式錯誤
 
-  // Loading
-  var ldiv=document.createElement('div');
-  ldiv.className='loading';ldiv.id='ld_'+ban;
-  ldiv.innerHTML='<div class="spin"></div><div><div style="font-size:13px;color:var(--gray)"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div><div style="font-size:10.5px;color:var(--gray);margin-top:2px">步驟1：查詢財政部資料集9400…</div></div>';
+  var ldiv=mkLoading(ban,ckOk?'步驟1：同步查詢商工GCIS ＋ 財政部9400…':'步驟1：格式疑問，嘗試查詢各資料來源…');
   list.prepend(ldiv);
 
-  // Step 1：9400
-  var d9400=null,src='';
-  try{
-    var r=await fetch(URL_9400+ban,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(10000)});
-    if(r.ok){var j=await r.json();if(j&&!(Array.isArray(j)&&j.length===0)){d9400=Array.isArray(j)?j[0]:j;src='9400';console.log('[9400]',ban,d9400);}}
-  }catch(e){console.warn('[9400 err]',e);}
+  // ── Step 1：GCIS + 9400 並行 ──────────────────────────────────────
+  var results=await Promise.allSettled([queryGCIS(ban),query9400(ban)]);
+  var gcis  =results[0].status==='fulfilled'?results[0].value:null;
+  var d9400 =results[1].status==='fulfilled'?results[1].value:null;
+  var sources=[];
+  if(gcis)  sources.push('GCIS');
+  if(d9400) sources.push('9400');
 
-  // Step 2：無資料 → AI 完整查
-  var aiData=null;
-  if(!d9400){
-    ldiv.innerHTML='<div class="spin blue"></div><div><div style="font-size:13px;color:var(--blue)"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div><div style="font-size:10.5px;color:var(--gray);margin-top:2px">步驟2：Claude AI 查詢財政部稅務入口網…</div></div>';
-    try{aiData=await queryAI(ban);src='ai';}catch(e){src='fail';console.warn('[AI err]',e);}
+  // ── Step 1b：GCIS 查無 → findbiz 備援（含政府機關、工廠等）────────
+  if(!gcis&&URL_WORKER){
+    setLoading(ban,'步驟1b：GCIS 查無，嘗試 findbiz.nat.gov.tw…',false);
+    var fb=await queryFindbiz(ban);
+    if(fb){gcis=fb;sources.push('findbiz');}
+  }
 
-  // Step 3：有資料但缺名稱/負責人 → AI 補查
-  }else{
-    var noName=!pickName(d9400,ban);
-    var noPrin=!pick(d9400,['responsible','responsibleName','負責人姓名','負責人','Principal','principal','representativeName','personInCharge']);
-    if(noName||noPrin){
-      ldiv.innerHTML='<div class="spin blue"></div><div><div style="font-size:13px;color:var(--blue)"><b style="font-family:JetBrains Mono,monospace">'+ban+'</b></div><div style="font-size:10.5px;color:var(--gray);margin-top:2px">步驟2：Claude AI 補查缺失欄位…</div></div>';
-      try{
-        var sup=await queryAI(ban);
-        if(sup){
-          if(sup.name&&noName)      d9400['businessNm']=sup.name;
-          if(sup.principal&&noPrin) d9400['負責人姓名']=sup.principal;
-          if(sup.orgType)           d9400['businessType']=sup.orgType;
-          if(sup.bizItems)          d9400['industryNm']=sup.bizItems;
-          if(sup.invoiceFlag&&sup.invoiceFlag!=='null') d9400['isUseInvoice']=sup.invoiceFlag;
-          src='9400+AI';
+  var merged=mergeData(gcis,d9400);
+
+  // ── Step 2：財政部稅務網 etax（補查非營業中、撤銷、停業）────────
+  if(URL_WORKER&&(!merged||!merged.businessNm||!merged.isUseInvoice)){
+    setLoading(ban,'步驟2：查詢財政部稅務網（含非營業中）…',false);
+    var et=await queryEtax(ban);
+    if(et){
+      sources.push('etax');
+      if(!merged){
+        merged={
+          businessNm:        et.name||'',
+          isUseInvoice:      et.invoiceFlag||'',
+          responsible:       et.responsible||'',
+          businessSetupDate: et.setupDate||'',
+          capitalAmount:     et.capital||'',
+          businessAddress:   et.address||'',
+          industryNm:        et.bizItems||'',
+          _statusOk:         et.statusOk,
+          _status:           et.status||'',
+          _orgType:          et.orgType||'',
+        };
+      }else{
+        if(!merged.businessNm     && et.name)        merged.businessNm=et.name;
+        if(!merged.isUseInvoice   && et.invoiceFlag) merged.isUseInvoice=et.invoiceFlag;
+        if(!merged.responsible    && et.responsible) merged.responsible=et.responsible;
+        if(!merged.businessAddress&& et.address)     merged.businessAddress=et.address;
+        if(!merged.capitalAmount  && et.capital)     merged.capitalAmount=et.capital;
+        if(!merged.industryNm     && et.bizItems)    merged.industryNm=et.bizItems;
+        if(merged._statusOk===null||merged._statusOk===undefined){
+          if(et.statusOk!==undefined){merged._statusOk=et.statusOk;merged._status=et.status||merged._status;}
         }
-      }catch(e){console.warn('[AI sup err]',e);}
+      }
+    }
+  }
+
+  // ── Step 3：twincn 補充（發票旗標還缺）───────────────────────────
+  var aiData=null;
+  if(URL_WORKER&&merged&&!merged.isUseInvoice){
+    setLoading(ban,'步驟3：補充查詢 twincn.com…',false);
+    var tw=await queryTwincn(ban);
+    if(tw){
+      sources.push('twincn');
+      if(tw.invoiceFlag&&!merged.isUseInvoice) merged.isUseInvoice=tw.invoiceFlag;
+      if(tw.name&&!merged.businessNm)          merged.businessNm=tw.name;
+      if(!merged._statusOk&&tw.statusOk!==undefined){merged._statusOk=tw.statusOk;merged._status=tw.status||merged._status;}
+    }
+  }
+
+  // ── Step 4：Claude AI 最後手段（需 Worker 或直接設定 CLAUDE_KEY）──
+  var canAI=!!(URL_WORKER||CLAUDE_KEY);
+  var needAI=!merged||!merged.businessNm;
+  if(!needAI&&merged&&!merged.isUseInvoice&&canAI) needAI=true;
+
+  if(needAI&&canAI){
+    setLoading(ban,'步驟4：Claude AI 查詢財政部稅務網…',true);
+    aiData=await queryAI(ban);
+    if(aiData){
+      sources.push('AI');
+      if(!merged){
+        // 完全靠 AI
+        merged={
+          businessNm:      aiData.name||'',
+          isUseInvoice:    aiData.invoiceFlag||'',
+          responsible:     aiData.principal||'',
+          businessSetupDate: aiData.setupDate||'',
+          capitalAmount:   aiData.capital||'',
+          businessAddress: aiData.address||'',
+          industryNm:      aiData.bizItems||'',
+          _statusOk:       aiData.statusOk!==undefined?aiData.statusOk:null,
+          _status:         aiData.status||'',
+          _orgType:        aiData.orgType||'',
+          _aiOnly:         true,
+          _aiConf:         aiData.confidence||'?',
+          _aiSrc:          aiData.source||'Claude AI',
+        };
+      }else{
+        applyAI(merged,aiData);
+      }
     }
   }
 
   ldiv.remove();
-  render(ban,d9400,true,src,aiData,list);
+  // 若真的完全查無資料且檢查碼也錯，才顯示格式錯誤
+  if(!merged&&!ckOk){render(ban,null,false,'ck',null,list);return;}
+  var srcStr=sources.length?sources.join('+'):'fail';
+  render(ban,merged,ckOk,srcStr,aiData,list);
 }
 
-async function queryAI(ban){
-  var prompt=
-    '請用 web_search 工具搜尋台灣統一編號「'+ban+'」的財政部稅籍公示資料。\n\n'+
-    '請搜尋以下關鍵字：「'+ban+' site:etax.nat.gov.tw」\n'+
-    '或：「'+ban+' 財政部稅籍 營業狀況 營業人名稱」\n\n'+
-    '重點：此商家可能是「非營業中」或「停業」，請務必如實回報 status 欄位。\n'+
-    '若查到「非營業中」「停業」「撤銷」「廢止」等字樣，statusOk 請填 false。\n'+
-    '若查到「營業中」，statusOk 請填 true。\n\n'+
-    '只回傳 JSON，不要其他文字：\n'+
-    '{"name":"營業人名稱","status":"營業中或非營業中或停業等","statusOk":true或false,'+
-    '"address":"地址","orgType":"組織種類","setupDate":"設立日期",'+
-    '"invoiceFlag":"Y或N或null","capital":"資本額","bizItems":"登記營業項目",'+
-    '"confidence":"high或medium或low","source":"資料來源網址"}';
-
-  var resp=await fetch(URL_AI,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:MODEL,
-      max_tokens:1500,
-      tools:[{type:'web_search_20250305',name:'web_search'}],
-      messages:[{role:'user',content:prompt}]
-    })
-  });
-  if(!resp.ok)throw new Error('HTTP '+resp.status);
-  var data=await resp.json();
-  var text='';
-  (data.content||[]).forEach(function(b){if(b.type==='text')text+=b.text;});
-  text=text.replace(/```json|```/g,'').trim();
-  var s=text.indexOf('{'),e=text.lastIndexOf('}');
-  if(s<0||e<0)throw new Error('No JSON');
-  return JSON.parse(text.slice(s,e+1));
-}
-
+// ── 結果渲染 ─────────────────────────────────────────────────────────
 function render(ban,d,ckOk,src,ai,container){
-  var badgeCls,badgeTxt,assessCls,assessHTML,srcCls,srcTxt;
+  var badgeCls,badgeTxt,assessCls,assessHTML;
+  var sp=getSrcDisplay(src);
+  var srcCls=sp.cls,srcTxt=sp.txt;
 
   if(src==='ck'){
     badgeCls='b-err';badgeTxt='格式錯誤';srcCls='sp-ck';srcTxt='驗算失敗';assessCls='err';
     assessHTML='❌ 統一編號格式不正確（檢查碼驗算失敗）。<br>此統編疑似誤植或偽造，建議退回重開，不予核銷。';
 
   }else if(d){
-    srcCls=(src==='9400+AI')?'sp-mix':'sp-9400';
-    srcTxt=(src==='9400+AI')?'9400 + AI補查':'資料集 9400';
-    var inv=pick(d,['isUseInvoice','使用統一發票','InvoiceFlag','invoiceFlag']);
-    if(inv==='N'){
-      badgeCls='b-exempt';badgeTxt='免開統一發票';assessCls='warn';
-      assessHTML='⚠ 此商家為<b>免用統一發票</b>之小規模營業人（使用統一發票＝N）。<br>應取得「<b>收據</b>」或「<b>普通收據</b>」入帳，而非統一發票格式。<br>請依公司報支規定判斷是否可核銷。';
+    // 有 API 資料（merged）
+    if(d._statusOk===false){
+      // GCIS 明確標示非正常
+      badgeCls='b-err';badgeTxt=d._status||'非正常';assessCls='err';
+      assessHTML='❌ 此商家稅籍狀態為「<b>'+esc(d._status||'非正常')+'</b>」，已非正常營業中。<br>'+
+        '此發票/收據來源有問題，<b>建議暫緩核銷</b>並向財政部查核確認。';
     }else{
-      badgeCls='b-ok';badgeTxt=(inv==='Y')?'正常╱使用統一發票':'正常營業';assessCls='ok';
-      assessHTML='✅ 商家稅籍登記正常（資料集9400僅收錄營業中資料）。<br>'+(inv==='Y'?'使用統一發票，進項稅額可申報扣抵，可依正常程序核銷。':'請至財政部官網確認是否使用統一發票後，再決定核銷方式。');
+      var inv=pick(d,['isUseInvoice','invoiceFlag','InvoiceFlag']);
+      if(inv==='N'){
+        badgeCls='b-exempt';badgeTxt='免開統一發票';assessCls='warn';
+        assessHTML='⚠ 此商家為<b>免用統一發票</b>之小規模營業人（使用統一發票＝N）。<br>'+
+          '應取得「<b>收據</b>」或「<b>普通收據</b>」入帳，而非統一發票格式。<br>'+
+          '請依公司報支規定判斷是否可核銷。';
+      }else if(inv==='Y'){
+        badgeCls='b-ok';badgeTxt='正常╱使用統一發票';assessCls='ok';
+        assessHTML='✅ 商家稅籍登記正常，使用統一發票。<br>'+
+          '進項稅額可申報扣抵，可依正常程序核銷。';
+      }else{
+        // 有資料但未確認發票旗標
+        badgeCls='b-ok';badgeTxt='正常營業';assessCls='ok';
+        assessHTML='✅ 商家稅籍登記正常。<br>'+
+          '發票使用狀況未確認，請至<a href="'+URL_INV+'" target="_blank" style="color:var(--blue)">財政部免開發票查詢</a>確認後再決定核銷方式。';
+      }
     }
 
-  }else if(ai){
-    srcCls='sp-ai';srcTxt='Claude AI';
-    var aok=ai.statusOk,ainv=ai.invoiceFlag,ast=ai.status||'';
-    if(!aok&&ast&&ast!=='營業中'){
-      // 非營業中：顯示紅色警告，但仍顯示商家資訊
-      badgeCls='b-err';badgeTxt=ast||'非正常';assessCls='err';
-      assessHTML='❌ 此商家稅籍狀態為「<b>'+esc(ast)+'</b>」，並非正常營業中。<br>'+
-        '此發票/收據來源有問題，<b>建議暫緩核銷</b>並向財政部查核。';
-    }else if(ainv==='N'){
-      badgeCls='b-exempt';badgeTxt='免開統一發票';assessCls='warn';
-      assessHTML='⚠ 此商家為<b>免用統一發票</b>之小規模營業人。<br>應取得「<b>收據</b>」入帳，請依公司規定判斷是否可核銷。';
-    }else if(aok||ast==='營業中'){
-      badgeCls='b-ok';badgeTxt=(ainv==='Y')?'正常╱使用統一發票':'正常營業';assessCls='ok';
-      assessHTML='✅ 此商家稅籍狀態正常（'+esc(ast)+'）。<br>'+(ainv==='Y'?'使用統一發票，可依正常程序核銷。':ainv==='N'?'⚠ 免開統一發票，應以收據入帳。':'請至財政部官網確認是否使用統一發票，再決定核銷方式。');
-    }else{
-      badgeCls='b-unk';badgeTxt='需人工確認';assessCls='unk';
-      assessHTML='⚠ AI 解析結果信心度較低（'+esc(ai.confidence||'?')+'）。<br>請至財政部稅務入口網人工確認後再決定是否核銷。';
-    }
   }else{
-    srcCls='sp-fail';srcTxt='需人工確認';badgeCls='b-unk';badgeTxt='需人工確認';assessCls='unk';
-    assessHTML='⚠ 自動查詢失敗（AI 無法取得資料）。<br>'+
-      '此統編可能為<b>非營業中、已撤銷或停業</b>的商家，9400 資料集不收錄。<br>'+
-      '請點擊下方「財政部稅籍查詢」，在官網輸入統編 <b>'+esc(ban)+'</b> 確認。';
+    // 所有來源均無資料
+    srcCls='sp-fail';srcTxt='查詢失敗';badgeCls='b-unk';badgeTxt='需人工確認';assessCls='unk';
+    assessHTML='⚠ 目前可用資料來源（GCIS + 9400）均查無此統編。<br>'+
+      '常見原因：<b>非營業中、已撤銷或停業</b>（9400 僅收錄營業中），或尚未完成登記。<br>'+
+      (!(URL_WORKER||CLAUDE_KEY)?
+        '💡 <b>設定方式</b>：在程式頂端填入 <code>CLAUDE_KEY</code>（Anthropic API Key）即可啟用 Claude AI 自動補查財政部稅務網，找出非營業中的詳細資料。<br>':'')+
+      '請點擊下方「財政部稅籍查詢」，輸入統編 <b>'+esc(ban)+'</b> 人工確認。';
   }
 
-  var name,inv2,invTxt,invCls,prin,setup,addr,capital,biz;
+  // 顯示欄位
+  var name,inv2,invTxt,invCls,prin,setup,addr,capital,biz,stTxt,stCls;
   if(d){
     name   =pickName(d,ban)||'（未提供）';
-    inv2   =pick(d,['isUseInvoice','使用統一發票','InvoiceFlag','invoiceFlag']);
-    invTxt =inv2==='Y'?'✅ 使用統一發票':inv2==='N'?'⚠ 免開統一發票':'（有登記，請確認）';
-    invCls =inv2==='Y'?'ok':inv2==='N'?'warn':'blue';
-    prin   =pick(d,['responsible','responsibleName','負責人姓名','負責人','Principal','principal','representativeName','personInCharge']);
-    setup  =pick(d,['businessSetupDate','設立日期','SetupDate','setupDate','RegisterDate']);
-    addr   =pick(d,['businessAddress','營業地址','地址','Address','address']);
-    capital=pick(d,['capitalAmount','資本額','Capital','capital']);
+    inv2   =pick(d,['isUseInvoice','invoiceFlag','InvoiceFlag']);
+    // 非營業中：發票欄位不適用；否則依旗標顯示
+    if(d._statusOk===false){
+      invTxt='非營業中，不適用';invCls='';
+    }else{
+      invTxt=inv2==='Y'?'✅ 使用統一發票':inv2==='N'?'⚠ 免開統一發票':'（請確認）';
+      invCls=inv2==='Y'?'ok':inv2==='N'?'warn':'blue';
+    }
+    prin   =pick(d,['responsible','responsibleName','負責人姓名','負責人']);
+    setup  =pick(d,['businessSetupDate','setupDate','設立日期']);
+    addr   =pick(d,['businessAddress','address','營業地址','地址']);
+    capital=pick(d,['capitalAmount','capital','資本額']);
     biz    =pickBiz(d);
-  }else if(ai){
-    name=ai.name||'（未提供）';inv2=ai.invoiceFlag||'';
-    invTxt=inv2==='Y'?'✅ 使用統一發票':inv2==='N'?'⚠ 免開統一發票':'未查到';
-    invCls=inv2==='Y'?'ok':inv2==='N'?'warn':'';
-    prin=ai.principal||'—';setup=ai.setupDate||'—';addr=ai.address||'—';capital=ai.capital||'—';biz=ai.bizItems||'—';
+    // 登記狀況文字與顏色
+    stTxt  =d._statusOk===false?('❌ '+esc(d._status||'非正常')):
+            d._status?('✅ '+esc(d._status)):'✅ 正常';
+    stCls  =d._statusOk===false?'err':d._statusOk===true?'ok':'blue';
   }else{name='（查無資料）';}
 
   var capFmt='—';
   if(capital&&capital!=='—'){var n=parseInt(String(capital).replace(/,/g,''));capFmt=isNaN(n)?capital:n.toLocaleString();}
 
   var bodyHTML='';
-  if(d||ai){
-    var stTxt=d?'✅ 正常（9400僅收錄營業中）':(ai&&ai.status?'✅ '+esc(ai.status):'✅ 正常');
+  if(d){
     bodyHTML=
       '<div class="res-body">'+
         '<div style="grid-column:1/-1"><div class="fk">營業人名稱</div><div class="fv big">'+esc(name)+'</div></div>'+
-        '<div><div class="fk">營業狀況</div><div class="fv ok">'+stTxt+'</div></div>'+
-        '<div><div class="fk">統一發票</div><div class="fv '+invCls+'">'+invTxt+'</div></div>'+
+        '<div><div class="fk">營業狀況</div><div class="fv '+stCls+'">'+stTxt+'</div></div>'+
+        (d._orgType?'<div><div class="fk">組織種類</div><div class="fv">'+esc(d._orgType)+'</div></div>':'')+
+        '<div><div class="fk">統一發票</div><div class="fv '+invCls+'">'+esc(invTxt)+'</div></div>'+
+        '<div><div class="fk">負責人</div><div class="fv">'+esc(prin||'—')+'</div></div>'+
         '<div><div class="fk">設立日期</div><div class="fv">'+fmtD(setup)+'</div></div>'+
         '<div><div class="fk">資本額（元）</div><div class="fv">'+esc(capFmt)+'</div></div>'+
         '<div style="grid-column:1/-1"><div class="fk">登記地址</div><div class="fv">'+esc(addr||'—')+'</div></div>'+
         '<div style="grid-column:1/-1"><div class="fk">登記營業項目</div><div class="fv" style="font-size:12px">'+esc(biz||'—')+'</div></div>'+
       '</div>';
-    if(ai&&!d){var cf=ai.confidence||'?';var cc=cf==='high'?'var(--green)':cf==='medium'?'var(--gold)':'var(--red)';bodyHTML+='<div style="margin:0 18px 8px;font-size:10.5px;color:var(--gray)">AI來源：'+esc(ai.source||'財政部稅務入口網')+'　信心度：<span style="color:'+cc+';font-weight:600">'+cf+'</span></div>';}
+    if(d._aiOnly){
+      var cf=d._aiConf||'?';var cc=cf==='high'?'var(--green)':cf==='medium'?'var(--gold)':'var(--red)';
+      bodyHTML+='<div style="margin:0 18px 8px;font-size:10.5px;color:var(--gray)">AI來源：'+esc(d._aiSrc||'')+'　信心度：<span style="color:'+cc+';font-weight:600">'+esc(cf)+'</span></div>';
+    }
+    // 檢查碼疑問警告（有資料但驗算未通過，常見於政府機關統編）
+    if(!ckOk){
+      bodyHTML+='<div style="margin:0 18px 10px;padding:7px 12px;background:rgba(138,104,0,.07);border-left:3px solid var(--gold);border-radius:2px;font-size:11.5px;color:#5a3e00">'+
+        '⚠ 此統編檢查碼驗算未通過（sum='+
+        (function(){var w=[1,2,1,2,1,2,4,1],t=0;for(var i=0;i<8;i++){var p=parseInt(ban[i])*w[i];t+=Math.floor(p/10)+(p%10);}return t;}())+
+        ' mod10≠0/7），但已查到登記資料。常見於政府機關、學校、特殊法人，建議人工確認後再核銷。</div>';
+    }
   }
 
+  // 原始欄位展開（排除 _私有欄位）
   var rawHTML='';
   if(d){
-    var rows2=Object.keys(d).map(function(k){return '<tr><td>'+esc(k)+'</td><td>'+esc(String(d[k]!==null&&d[k]!==undefined?d[k]:''))+'</td></tr>';}).join('');
-    rawHTML='<details class="raw"><summary>原始 API 欄位（點擊展開）</summary><table class="raw-tbl">'+rows2+'</table></details>';
+    var rows2=Object.keys(d).filter(function(k){return k[0]!=='_';}).map(function(k){return '<tr><td>'+esc(k)+'</td><td>'+esc(String(d[k]!==null&&d[k]!==undefined?d[k]:''))+'</td></tr>';}).join('');
+    if(rows2)rawHTML='<details class="raw"><summary>原始 API 欄位（點擊展開）</summary><table class="raw-tbl">'+rows2+'</table></details>';
   }
 
   var card=document.createElement('div');
@@ -481,7 +777,7 @@ function render(ban,d,ckOk,src,ai,container){
     '<div class="res-hdr">'+
       '<div class="co-blk">'+
         '<div class="co-name">'+esc(name)+'</div>'+
-        '<div class="co-ban">統編 '+ban+' '+(ckOk?'<span style="color:var(--green)">✓ 格式正確</span>':'<span style="color:var(--red)">✗ 格式異常</span>')+'</div>'+
+        '<div class="co-ban">統編 '+ban+' '+(ckOk?'<span style="color:var(--green)">✓ 格式正確</span>':(d?'<span style="color:var(--gold)">⚠ 驗算疑問</span>':'<span style="color:var(--red)">✗ 格式異常</span>'))+'</div>'+
       '</div>'+
       '<span class="src-pill '+srcCls+'">'+srcTxt+'</span>'+
       '<span class="badge '+badgeCls+'">'+badgeTxt+'</span>'+
@@ -492,13 +788,13 @@ function render(ban,d,ckOk,src,ai,container){
     '<div class="res-acts">'+
       '<a class="btn-link blue" href="'+URL_ETAX+'" target="_blank">🔗 財政部稅籍查詢</a>'+
       '<a class="btn-link blue" href="'+URL_INV+'" target="_blank">📋 免開發票查詢</a>'+
-      (d?'<a class="btn-link red" href="'+URL_9400+ban+'" target="_blank">📄 9400 API</a>':'')+
+      '<a class="btn-link red" href="'+URL_9400+ban+'" target="_blank">📄 9400 API</a>'+
       '<button class="btn-del" onclick="delCard(\''+ban+'\')">✕ 移除</button>'+
     '</div>';
 
   container.prepend(card);
 
-  var invDisp=(inv2==='Y')?'使用統一發票':(inv2==='N')?'免開統一發票':'（有登記）';
+  var invDisp=(inv2==='Y')?'使用統一發票':(inv2==='N')?'免開統一發票':'（請確認）';
   store[ban]={ban:ban,name:name,badge:badgeTxt,assess:assessHTML.replace(/<[^>]+>/g,''),src:src,inv:invDisp,cls:badgeCls,time:new Date().toLocaleTimeString('zh-TW')};
   addHist(ban,name,badgeTxt,badgeCls);
   document.getElementById('expRow').style.display='flex';
@@ -518,7 +814,7 @@ function renderHist(){
 function clearAll(){if(!confirm('確定要清除所有查驗結果與記錄？'))return;store={};hist=[];renderHist();document.getElementById('resList').innerHTML='';document.getElementById('resSec').style.display='none';document.getElementById('expRow').style.display='none';}
 function delCard(ban){var el=document.getElementById('rc_'+ban);if(el)el.remove();delete store[ban];if(!Object.keys(store).length)document.getElementById('expRow').style.display='none';}
 
-function toCSV(){var rows=[['統一編號','營業人名稱','狀態','統一發票','資料來源','會計建議','查詢時間']];Object.values(store).forEach(function(r){rows.push([r.ban,r.name,r.badge,r.inv,r.src,r.assess,r.time]);});var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');dl('\uFEFF'+csv,'統編查驗_'+today()+'.csv','text/csv;charset=utf-8');}
+function toCSV(){var rows=[['統一編號','營業人名稱','狀態','統一發票','資料來源','會計建議','查詢時間']];Object.values(store).forEach(function(r){rows.push([r.ban,r.name,r.badge,r.inv,r.src,r.assess,r.time]);});var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');dl('﻿'+csv,'統編查驗_'+today()+'.csv','text/csv;charset=utf-8');}
 function toTXT(){var t='發票統編查驗報告\n產製時間：'+new Date().toLocaleString('zh-TW')+'\n'+'═'.repeat(48)+'\n\n';Object.values(store).forEach(function(r){t+='統一編號：'+r.ban+'\n營業人名稱：'+r.name+'\n狀態：'+r.badge+'\n統一發票：'+r.inv+'\n資料來源：'+r.src+'\n會計建議：'+r.assess+'\n'+'─'.repeat(38)+'\n\n';});dl(t,'統編查驗_'+today()+'.txt','text/plain;charset=utf-8');}
 function dl(c,f,t){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=f;a.click();}
 function today(){return new Date().toISOString().slice(0,10);}
